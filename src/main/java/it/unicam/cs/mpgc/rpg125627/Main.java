@@ -1,10 +1,14 @@
-package it.unicam.cs.mpgc.rpg;
+package it.unicam.cs.mpgc.rpg125627;
 
 import javafx.application.Application;
 import javafx.scene.Scene;
 import javafx.scene.layout.StackPane;
 import javafx.stage.Stage;
 
+/**
+ * Punto di ingresso dell'applicazione JavaFX.
+ * Apre la finestra principale del gioco.
+ */
 public class Main extends Application {
 
     @Override

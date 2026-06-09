@@ -26,7 +26,7 @@ javafx {
 }
 
 application {
-    mainClass = "it.unicam.cs.mpgc.rpg.Main"
+    mainClass = "it.unicam.cs.mpgc.rpg125627.Main"
 }
 
 tasks.named<ShadowJar>("shadowJar") {
@@ -34,7 +34,7 @@ tasks.named<ShadowJar>("shadowJar") {
     archiveClassifier = "all"
     mergeServiceFiles()
     manifest {
-        attributes["Main-Class"] = "it.unicam.cs.mpgc.rpg.Main"
+        attributes["Main-Class"] = "it.unicam.cs.mpgc.rpg125627.Main"
     }
 }
 
