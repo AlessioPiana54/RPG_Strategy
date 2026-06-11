@@ -3,6 +3,7 @@ package it.unicam.cs.mpgc.rpg125627.view;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Button;
+import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TextArea;
 import javafx.scene.layout.HBox;
@@ -10,13 +11,15 @@ import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 
 /**
- * Barra inferiore con i pulsanti di azione ("Fine turno", "Annulla") e un log
- * testuale scorrevole degli eventi di battaglia.
+ * Barra inferiore con i pulsanti di azione ("Fine turno", "Annulla"), un'etichetta
+ * "Turno nemico..." visibile durante {@code ENEMY_TURN}, e un log testuale scorrevole
+ * degli eventi di battaglia.
  */
 public class ActionBar extends HBox {
 
     private final Button endTurnButton;
     private final Button undoButton;
+    private final Label  enemyTurnLabel;
     private final TextArea logArea;
 
     public ActionBar() {
@@ -49,7 +52,17 @@ public class ActionBar extends HBox {
             -fx-background-radius: 4;
             """);
 
-        VBox buttons = new VBox(8, endTurnButton, undoButton);
+        enemyTurnLabel = new Label("Turno nemico...");
+        enemyTurnLabel.setStyle("""
+            -fx-text-fill: #ff6b6b;
+            -fx-font-size: 13;
+            -fx-font-weight: bold;
+            -fx-font-style: italic;
+            """);
+        enemyTurnLabel.setVisible(false);
+        enemyTurnLabel.setManaged(false);
+
+        VBox buttons = new VBox(8, endTurnButton, undoButton, enemyTurnLabel);
         buttons.setAlignment(Pos.CENTER);
         buttons.setMinWidth(130);
 
@@ -95,5 +108,16 @@ public class ActionBar extends HBox {
 
     public void setUndoEnabled(boolean enabled) {
         undoButton.setDisable(!enabled);
+    }
+
+    /**
+     * Mostra o nasconde l'etichetta "Turno nemico..." e disabilita/abilita
+     * i pulsanti di conseguenza.
+     */
+    public void setEnemyTurnActive(boolean active) {
+        enemyTurnLabel.setVisible(active);
+        enemyTurnLabel.setManaged(active);
+        endTurnButton.setDisable(active);
+        undoButton.setDisable(active);
     }
 }

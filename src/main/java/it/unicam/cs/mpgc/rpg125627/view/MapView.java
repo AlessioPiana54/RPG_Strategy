@@ -1,5 +1,6 @@
 package it.unicam.cs.mpgc.rpg125627.view;
 
+import it.unicam.cs.mpgc.rpg125627.model.ActionState;
 import it.unicam.cs.mpgc.rpg125627.model.GridMap;
 import it.unicam.cs.mpgc.rpg125627.model.Position;
 import it.unicam.cs.mpgc.rpg125627.model.Team;
@@ -7,13 +8,13 @@ import it.unicam.cs.mpgc.rpg125627.model.Tile;
 import it.unicam.cs.mpgc.rpg125627.model.TileType;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
+import javafx.scene.control.Label;
 import javafx.scene.control.Tooltip;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
 import javafx.scene.shape.Rectangle;
-import javafx.scene.control.Label;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -27,7 +28,9 @@ import java.util.function.Consumer;
  *   <li>Rettangolo overlay semi-trasparente (celle raggiungibili / bersagliabili)</li>
  *   <li>Cerchio + label dell'iniziale per le unità presenti</li>
  * </ol>
- * La cella selezionata viene evidenziata con un bordo giallo via CSS.
+ * La cella selezionata viene evidenziata con un bordo giallo.
+ * Le unità {@link ActionState#EXHAUSTED} vengono disegnate a opacità ridotta (0.4).
+ * Le unità {@link ActionState#MOVED} hanno un bordo tratteggiato sulla cella.
  */
 public class MapView extends GridPane {
 
@@ -96,7 +99,6 @@ public class MapView extends GridPane {
             stack.getChildren().add(sym);
         }
 
-        // Bordo: nessuno per default
         stack.setStyle("-fx-border-color: transparent; -fx-border-width: 3;");
 
         final Position p = pos;
@@ -107,7 +109,7 @@ public class MapView extends GridPane {
 
     // ── Aggiornamento ─────────────────────────────────────────────────────────
 
-    /** Ridesenha le unità su tutte le celle (terreno invariato). */
+    /** Ridisegna le unità su tutte le celle (terreno invariato). */
     public void refresh() {
         for (int r = 0; r < map.getRighe(); r++) {
             for (int c = 0; c < map.getColonne(); c++) {
@@ -139,10 +141,22 @@ public class MapView extends GridPane {
             label.setMouseTransparent(true);
 
             Tooltip tip = new Tooltip(unit.getName() + " (" + unit.getClasseUnita() + ")"
-                + "  HP " + unit.getHp() + "/" + unit.getMaxHp());
+                + "  HP " + unit.getHp() + "/" + unit.getMaxHp()
+                + "  [" + unit.getActionState() + "]");
             Tooltip.install(circle, tip);
 
+            // Unità EXHAUSTED: opacità ridotta
+            if (unit.getActionState() == ActionState.EXHAUSTED) {
+                circle.setOpacity(0.4);
+                label.setOpacity(0.4);
+            }
+
             stack.getChildren().addAll(circle, label);
+
+            // Unità MOVED: bordo tratteggiato sulla cella (sovrascrive solo se non già selezionata)
+            if (unit.getActionState() == ActionState.MOVED) {
+                applyMovedBorder(stack);
+            }
         });
     }
 
@@ -156,6 +170,17 @@ public class MapView extends GridPane {
                 .findFirst()
                 .ifPresent(n -> ((Rectangle) n).setFill(Color.TRANSPARENT));
             stack.setStyle("-fx-border-color: transparent; -fx-border-width: 3;");
+        }
+        // Ripristina i bordi tratteggiati delle unità MOVED
+        for (int r = 0; r < map.getRighe(); r++) {
+            for (int c = 0; c < map.getColonne(); c++) {
+                Position pos = new Position(r, c);
+                map.getUnit(pos).ifPresent(unit -> {
+                    if (unit.getActionState() == ActionState.MOVED) {
+                        applyMovedBorder(cells.get(pos));
+                    }
+                });
+            }
         }
     }
 
@@ -193,7 +218,13 @@ public class MapView extends GridPane {
         }
     }
 
-    // ── Colori ───────────────────────────────────────────────────────────────
+    // ── Helpers ───────────────────────────────────────────────────────────────
+
+    private void applyMovedBorder(StackPane stack) {
+        if (stack == null) return;
+        stack.setStyle("-fx-border-color: #00BFFF; -fx-border-width: 3;"
+            + " -fx-border-style: dashed;");
+    }
 
     private Color terrainColor(TileType type) {
         return switch (type) {

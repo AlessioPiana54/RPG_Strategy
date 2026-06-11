@@ -4,6 +4,7 @@ import it.unicam.cs.mpgc.rpg125627.controller.BattleEngine;
 import it.unicam.cs.mpgc.rpg125627.controller.DefaultGameController;
 import it.unicam.cs.mpgc.rpg125627.controller.GameEventListener;
 import it.unicam.cs.mpgc.rpg125627.model.Ability;
+import it.unicam.cs.mpgc.rpg125627.model.ActionState;
 import it.unicam.cs.mpgc.rpg125627.model.GamePhase;
 import it.unicam.cs.mpgc.rpg125627.model.GameState;
 import it.unicam.cs.mpgc.rpg125627.model.GridMap;
@@ -30,7 +31,7 @@ import java.util.Set;
  * <p>Tutti gli aggiornamenti alla GUI provenienti da eventi del BattleEngine
  * vengono eseguiti tramite {@link Platform#runLater} per garantire la thread-safety.</p>
  *
- * <p>La macchina a stati di interazione:</p>
+ * <p>Macchina a stati di interazione:</p>
  * <ul>
  *   <li>{@code IDLE} → clic su unità alleata → {@code UNIT_SELECTED}</li>
  *   <li>{@code UNIT_SELECTED} → clic su cella raggiungibile → movimento</li>
@@ -52,8 +53,6 @@ public class GameViewController implements GameEventListener {
     private Ability selectedAbility;
     private Set<Position> reachablePositions = Set.of();
     private Set<Position> targetablePositions = Set.of();
-    private boolean selectedUnitMoved;
-    private boolean selectedUnitActed;
 
     public GameViewController(DefaultGameController controller,
                               BattleEngine battleEngine,
@@ -80,15 +79,16 @@ public class GameViewController implements GameEventListener {
         if (gs.isOver() || gs.getFase() != GamePhase.PLAYER_TURN) return;
 
         switch (state) {
-            case IDLE             -> handleIdleClick(pos, gs);
-            case UNIT_SELECTED    -> handleUnitSelectedClick(pos, gs);
+            case IDLE              -> handleIdleClick(pos, gs);
+            case UNIT_SELECTED     -> handleUnitSelectedClick(pos, gs);
             case ABILITY_TARGETING -> handleAbilityTargetingClick(pos);
         }
     }
 
     private void handleIdleClick(Position pos, GameState gs) {
         Optional<Unit> unit = gs.getMappa().getUnit(pos);
-        if (unit.isPresent() && unit.get().getTeam() == Team.PLAYER) {
+        if (unit.isPresent() && unit.get().getTeam() == Team.PLAYER
+                && unit.get().getActionState() != ActionState.EXHAUSTED) {
             doSelectUnit(unit.get(), pos);
         }
     }
@@ -98,22 +98,25 @@ public class GameViewController implements GameEventListener {
 
         if (unitOpt.isPresent() && unitOpt.get().getTeam() == Team.PLAYER) {
             Unit clicked = unitOpt.get();
+            if (clicked.getActionState() == ActionState.EXHAUSTED) {
+                doDeselect();
+                return;
+            }
             if (clicked == selectedUnit) {
-                // Clic sulla stessa unità: aggiorna solo gli highlight
                 refreshHighlights();
             } else {
-                // Cambio selezione
                 doSelectUnit(clicked, pos);
             }
             return;
         }
 
-        if (!selectedUnitMoved && reachablePositions.contains(pos)) {
+        // Movimento: solo se l'unità è READY e la cella è raggiungibile
+        if (selectedUnit != null
+                && selectedUnit.getActionState() == ActionState.READY
+                && reachablePositions.contains(pos)) {
             try {
                 controller.moveSelectedUnit(pos);
-                selectedUnitMoved = true;
                 reachablePositions = Set.of();
-                // onUnitMoved farà refresh della mappa; aggiorna gli highlight
                 Platform.runLater(this::refreshHighlights);
             } catch (Exception e) {
                 actionBar.appendLog("Movimento non valido: " + e.getMessage());
@@ -121,7 +124,6 @@ public class GameViewController implements GameEventListener {
             return;
         }
 
-        // Clic su cella vuota/non raggiungibile: deseleziona
         if (unitOpt.isEmpty()) {
             doDeselect();
         }
@@ -131,17 +133,18 @@ public class GameViewController implements GameEventListener {
         if (targetablePositions.contains(pos)) {
             try {
                 controller.useAbility(selectedAbility, pos);
-                selectedUnitActed = true;
                 actionBar.appendLog("Abilità usata: " + selectedAbility.getName());
             } catch (Exception e) {
                 actionBar.appendLog("Abilità non valida: " + e.getMessage());
             }
         }
-        // Torna sempre allo stato UNIT_SELECTED dopo il targeting
         selectedAbility      = null;
         targetablePositions  = Set.of();
         state                = InteractionState.UNIT_SELECTED;
-        Platform.runLater(this::fullRefresh);
+        Platform.runLater(() -> {
+            fullRefresh();
+            checkAutoEndTurn();
+        });
     }
 
     // ── Selezione unità ───────────────────────────────────────────────────────
@@ -151,17 +154,18 @@ public class GameViewController implements GameEventListener {
         Unit confirmed = controller.getSelectedUnit();
         if (confirmed == null) return;
 
-        selectedUnit      = confirmed;
-        state             = InteractionState.UNIT_SELECTED;
-        selectedUnitMoved = false;
-        selectedUnitActed = false;
-        reachablePositions = computeReachable(selectedUnit);
+        selectedUnit        = confirmed;
+        state               = InteractionState.UNIT_SELECTED;
+        reachablePositions  = selectedUnit.getActionState() == ActionState.READY
+            ? computeReachable(selectedUnit) : Set.of();
         targetablePositions = Set.of();
 
         unitInfoPanel.showUnit(selectedUnit, this::onAbilitySelected);
-        unitInfoPanel.setAbilitiesEnabled(true);
+        boolean canAct = selectedUnit.getActionState() != ActionState.EXHAUSTED;
+        unitInfoPanel.setAbilitiesEnabled(canAct);
         refreshHighlights();
-        actionBar.appendLog("Selezionata: " + selectedUnit.getName());
+        actionBar.appendLog("Selezionata: " + selectedUnit.getName()
+            + " [" + selectedUnit.getActionState() + "]");
     }
 
     private void doDeselect() {
@@ -170,8 +174,6 @@ public class GameViewController implements GameEventListener {
         selectedAbility     = null;
         reachablePositions  = Set.of();
         targetablePositions = Set.of();
-        selectedUnitMoved   = false;
-        selectedUnitActed   = false;
         mapView.clearOverlays();
         unitInfoPanel.clear();
     }
@@ -179,7 +181,8 @@ public class GameViewController implements GameEventListener {
     // ── Selezione abilità ─────────────────────────────────────────────────────
 
     private void onAbilitySelected(Ability ability) {
-        if (selectedUnit == null || selectedUnitActed || !selectedUnit.isAlive()) return;
+        if (selectedUnit == null || !selectedUnit.isAlive()) return;
+        if (selectedUnit.getActionState() == ActionState.EXHAUSTED) return;
 
         state               = InteractionState.ABILITY_TARGETING;
         selectedAbility     = ability;
@@ -195,6 +198,20 @@ public class GameViewController implements GameEventListener {
         actionBar.appendLog("Scegli bersaglio per: " + ability.getName());
     }
 
+    // ── Auto fine turno ───────────────────────────────────────────────────────
+
+    /** Chiama automaticamente endTurn() se tutte le unità PLAYER sono EXHAUSTED. */
+    private void checkAutoEndTurn() {
+        if (!controller.getGameState().isOver()
+                && controller.getGameState().getFase() == GamePhase.PLAYER_TURN
+                && controller.isEndTurnAvailable()) {
+            actionBar.appendLog("─── Tutte le unità hanno agito: fine turno automatico ───");
+            doDeselect();
+            controller.endTurn();
+            Platform.runLater(this::fullRefresh);
+        }
+    }
+
     // ── Fine turno / Annulla ──────────────────────────────────────────────────
 
     private void onEndTurn() {
@@ -202,8 +219,6 @@ public class GameViewController implements GameEventListener {
         doDeselect();
         actionBar.appendLog("─── Fine turno giocatore ───");
         controller.endTurn();
-        // Gli eventi AI verranno processati tramite i runLater schedulati durante endTurn;
-        // questo runLater finale garantisce un refresh completo dopo che tutto è concluso.
         Platform.runLater(this::fullRefresh);
     }
 
@@ -213,13 +228,10 @@ public class GameViewController implements GameEventListener {
             actionBar.appendLog("Nessun comando da annullare.");
             return;
         }
-        if (selectedUnitMoved) {
-            selectedUnitMoved  = false;
-            reachablePositions = selectedUnit != null ? computeReachable(selectedUnit) : Set.of();
-        } else if (selectedUnitActed) {
-            selectedUnitActed = false;
+        if (selectedUnit != null) {
+            reachablePositions = computeReachable(selectedUnit);
         }
-        actionBar.appendLog("Ultimo comando annullato.");
+        actionBar.appendLog("Ultimo movimento annullato.");
         Platform.runLater(this::fullRefresh);
     }
 
@@ -229,8 +241,11 @@ public class GameViewController implements GameEventListener {
         mapView.clearOverlays();
         if (state == InteractionState.UNIT_SELECTED && selectedUnit != null) {
             mapView.highlightSelected(selectedUnit.getPosizione());
-            if (!selectedUnitMoved) mapView.showReachable(reachablePositions);
-            unitInfoPanel.setAbilitiesEnabled(!selectedUnitActed);
+            if (selectedUnit.getActionState() == ActionState.READY) {
+                mapView.showReachable(reachablePositions);
+            }
+            boolean canAct = selectedUnit.getActionState() != ActionState.EXHAUSTED;
+            unitInfoPanel.setAbilitiesEnabled(canAct);
 
         } else if (state == InteractionState.ABILITY_TARGETING && selectedUnit != null) {
             mapView.highlightSelected(selectedUnit.getPosizione());
@@ -250,7 +265,8 @@ public class GameViewController implements GameEventListener {
         if (selectedUnit != null) {
             if (selectedUnit.isAlive()) {
                 unitInfoPanel.showUnit(selectedUnit, this::onAbilitySelected);
-                unitInfoPanel.setAbilitiesEnabled(!selectedUnitActed);
+                boolean canAct = selectedUnit.getActionState() != ActionState.EXHAUSTED;
+                unitInfoPanel.setAbilitiesEnabled(canAct);
             } else {
                 doDeselect();
             }
@@ -262,6 +278,7 @@ public class GameViewController implements GameEventListener {
             actionBar.appendLog("═══ " + msg + " ═══");
             actionBar.setEndTurnEnabled(false);
             actionBar.setUndoEnabled(false);
+            actionBar.setEnemyTurnActive(false);
         }
     }
 
@@ -308,7 +325,6 @@ public class GameViewController implements GameEventListener {
             range = Integer.MAX_VALUE;
             friendlyOnly = true;
         } else {
-            // MeleeAttack (and any future melee-type)
             range = 1;
             friendlyOnly = false;
         }
@@ -363,6 +379,16 @@ public class GameViewController implements GameEventListener {
             String txt = "Turno " + turnNumber + " — " + (isPlayer ? "GIOCATORE" : "NEMICO");
             unitInfoPanel.setPhaseText(txt, isPlayer);
             actionBar.appendLog("─── " + txt + " ───");
+
+            // Abilita/disabilita i controlli in base al team attivo
+            actionBar.setEnemyTurnActive(!isPlayer);
+            if (isPlayer) {
+                // Riabilita Fine turno solo se partita ancora in corso
+                GameState gs = controller.getGameState();
+                if (!gs.isOver()) {
+                    actionBar.setEndTurnEnabled(true);
+                }
+            }
         });
     }
 }

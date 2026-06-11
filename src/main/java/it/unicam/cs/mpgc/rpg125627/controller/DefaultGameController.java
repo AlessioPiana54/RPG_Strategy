@@ -1,6 +1,7 @@
 package it.unicam.cs.mpgc.rpg125627.controller;
 
 import it.unicam.cs.mpgc.rpg125627.model.Ability;
+import it.unicam.cs.mpgc.rpg125627.model.ActionState;
 import it.unicam.cs.mpgc.rpg125627.model.GamePhase;
 import it.unicam.cs.mpgc.rpg125627.model.GameState;
 import it.unicam.cs.mpgc.rpg125627.model.Position;
@@ -33,8 +34,6 @@ public class DefaultGameController implements GameController {
     private final Deque<GameCommand> commandHistory = new ArrayDeque<>();
 
     private Unit selectedUnit;
-    private boolean unitHasMoved;
-    private boolean unitHasActed;
 
     public DefaultGameController(GameState gameState,
                                  BattleEngine battleEngine,
@@ -53,6 +52,10 @@ public class DefaultGameController implements GameController {
         battleEngine.fireTurnChanged(Team.PLAYER, gameState.getTurnoCorrente());
     }
 
+    /**
+     * Seleziona l'unità alla posizione indicata.
+     * Rifiuta se l'unità non appartiene al team corrente, è morta o è {@link ActionState#EXHAUSTED}.
+     */
     @Override
     public void selectUnit(Position position) {
         Objects.requireNonNull(position, "position");
@@ -62,41 +65,63 @@ public class DefaultGameController implements GameController {
             ? Team.PLAYER : Team.ENEMY;
 
         gameState.getMappa().getUnit(position).ifPresent(unit -> {
-            if (unit.getTeam() == expectedTeam && unit.isAlive()) {
-                selectedUnit  = unit;
-                unitHasMoved  = false;
-                unitHasActed  = false;
+            if (unit.getTeam() == expectedTeam
+                    && unit.isAlive()
+                    && unit.getActionState() != ActionState.EXHAUSTED) {
+                selectedUnit = unit;
             }
         });
     }
 
+    /**
+     * Sposta l'unità selezionata verso {@code target}.
+     * Rifiuta se l'unità non è in stato {@link ActionState#READY}.
+     */
     @Override
     public void moveSelectedUnit(Position target) {
         Objects.requireNonNull(target, "target");
-        if (selectedUnit == null || unitHasMoved || !isActiveTurn()) return;
+        if (selectedUnit == null || !isActiveTurn()) return;
+        if (selectedUnit.getActionState() != ActionState.READY) return;
 
         MoveCommand cmd = new MoveCommand(selectedUnit, target, battleEngine, gameState.getMappa());
         cmd.execute();
         commandHistory.push(cmd);
-        unitHasMoved = true;
+        selectedUnit.onMoved();
     }
 
+    /**
+     * Usa {@code ability} puntando a {@code targetPosition}.
+     * Rifiuta se l'unità selezionata è {@link ActionState#EXHAUSTED}.
+     */
     @Override
     public void useAbility(Ability ability, Position targetPosition) {
         Objects.requireNonNull(ability,         "ability");
         Objects.requireNonNull(targetPosition,  "targetPosition");
-        if (selectedUnit == null || unitHasActed || !isActiveTurn()) return;
+        if (selectedUnit == null || !isActiveTurn()) return;
+        if (selectedUnit.getActionState() == ActionState.EXHAUSTED) return;
 
         gameState.getMappa().getUnit(targetPosition).ifPresent(target -> {
             AbilityCommand cmd = new AbilityCommand(
                 selectedUnit, ability, target, battleEngine, gameState.getMappa());
             cmd.execute();
             commandHistory.push(cmd);
-            unitHasActed = true;
+            selectedUnit.onActed();
             gameState.checkVictory();
         });
     }
 
+    /**
+     * Termina il turno del giocatore, esegue il turno nemico e ripristina il turno del giocatore.
+     *
+     * <p>Sequenza:</p>
+     * <ol>
+     *   <li>Imposta ENEMY_TURN e notifica i listener</li>
+     *   <li>Esegue {@link SimpleAIStrategy#playTurn}</li>
+     *   <li>Chiama {@code resetForNewTurn()} su tutte le unità</li>
+     *   <li>Imposta PLAYER_TURN (incrementando il contatore turni in {@link GameState})</li>
+     *   <li>Notifica {@code onTurnChanged} a tutti i listener registrati</li>
+     * </ol>
+     */
     @Override
     public void endTurn() {
         if (gameState.isOver()) return;
@@ -104,16 +129,20 @@ public class DefaultGameController implements GameController {
         clearSelection();
         commandHistory.clear();
 
-        // Giocatore → Nemico
+        // 1. PLAYER_TURN → ENEMY_TURN + notifica
         gameState.nextTurn();
         battleEngine.fireTurnChanged(Team.ENEMY, gameState.getTurnoCorrente());
         turnManager.resetTurn();
 
+        // 2. Esegui turno IA
         if (!gameState.isOver()) {
             aiStrategy.playTurn(gameState, this);
         }
 
-        // Nemico → Giocatore (incrementa il contatore dei turni in GameState)
+        // 3. resetForNewTurn su tutte le unità
+        gameState.getUnita().forEach(Unit::resetForNewTurn);
+
+        // 4-5. ENEMY_TURN → PLAYER_TURN (incrementa turnoCorrente) + notifica
         if (!gameState.isOver()) {
             gameState.nextTurn();
             battleEngine.fireTurnChanged(Team.PLAYER, gameState.getTurnoCorrente());
@@ -130,24 +159,36 @@ public class DefaultGameController implements GameController {
     // ── API aggiuntiva ───────────────────────────────────────────────────────
 
     /**
-     * Annulla l'ultimo comando di movimento o abilità eseguito durante il turno corrente
-     * del giocatore. Solo i {@link MoveCommand} supportano completamente l'annullamento;
+     * Annulla l'ultimo comando di movimento eseguito durante il turno corrente del giocatore.
+     * Solo i {@link MoveCommand} supportano completamente l'annullamento;
      * gli {@link AbilityCommand} no.
      *
      * @return {@code true} se un comando è stato annullato
      */
     public boolean undoLastCommand() {
         if (commandHistory.isEmpty()) return false;
-        GameCommand cmd = commandHistory.pop();
+        GameCommand cmd = commandHistory.peek();
+        if (!(cmd instanceof MoveCommand)) return false;
+        commandHistory.pop();
         cmd.undo();
-        if (cmd instanceof MoveCommand)    unitHasMoved = false;
-        if (cmd instanceof AbilityCommand) unitHasActed = false;
+        if (selectedUnit != null) {
+            selectedUnit.resetForNewTurn();
+        }
         return true;
     }
 
     /** Restituisce l'unità attualmente selezionata, o {@code null} se nessuna è selezionata. */
     public Unit getSelectedUnit() {
         return selectedUnit;
+    }
+
+    /**
+     * Restituisce {@code true} se tutte le unità PLAYER sono {@link ActionState#EXHAUSTED},
+     * indicando che il turno può terminare automaticamente.
+     */
+    public boolean isEndTurnAvailable() {
+        return gameState.getUnitaVive(Team.PLAYER).stream()
+            .allMatch(u -> u.getActionState() == ActionState.EXHAUSTED);
     }
 
     // ── Metodi interni ───────────────────────────────────────────────────────
@@ -159,7 +200,5 @@ public class DefaultGameController implements GameController {
 
     private void clearSelection() {
         selectedUnit = null;
-        unitHasMoved = false;
-        unitHasActed = false;
     }
 }

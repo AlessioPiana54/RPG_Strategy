@@ -32,6 +32,9 @@ public class Unit implements Combatant {
     @XmlElement(name = "position")
     private Position posizione;
 
+    @XmlElement(name = "actionState")
+    private ActionState actionState = ActionState.READY;
+
     @XmlElements({
         @XmlElement(name = "melee",  type = MeleeAttack.class),
         @XmlElement(name = "ranged", type = RangedAttack.class),
@@ -57,6 +60,7 @@ public class Unit implements Combatant {
         this.posizione    = Objects.requireNonNull(posizioneIniziale, "posizioneIniziale");
         this.maxHp        = classeUnita.getBaseHp();
         this.hp           = this.maxHp;
+        this.actionState  = ActionState.READY;
         this.abilita      = new ArrayList<>();
     }
 
@@ -78,6 +82,38 @@ public class Unit implements Combatant {
 
     /** @return vista in sola lettura delle abilità possedute dall'unità */
     public List<Ability> getAbilita() { return Collections.unmodifiableList(abilita); }
+
+    /** @return lo stato d'azione corrente dell'unità nel turno */
+    public ActionState getActionState() { return actionState; }
+
+    // ── Gestione stato azione ─────────────────────────────────────────────────
+
+    /**
+     * Registra che l'unità si è mossa in questo turno: {@link ActionState#READY} → {@link ActionState#MOVED}.
+     *
+     * @throws IllegalStateException se l'unità non è in stato {@link ActionState#READY}
+     */
+    public void onMoved() {
+        if (actionState != ActionState.READY) {
+            throw new IllegalStateException(
+                name + " non può muoversi: stato corrente=" + actionState);
+        }
+        actionState = ActionState.MOVED;
+    }
+
+    /**
+     * Registra che l'unità ha agito in questo turno: qualsiasi stato → {@link ActionState#EXHAUSTED}.
+     */
+    public void onActed() {
+        actionState = ActionState.EXHAUSTED;
+    }
+
+    /**
+     * Reimposta lo stato per un nuovo turno: → {@link ActionState#READY}.
+     */
+    public void resetForNewTurn() {
+        actionState = ActionState.READY;
+    }
 
     // ── Mutazioni ────────────────────────────────────────────────────────────
 
@@ -138,6 +174,7 @@ public class Unit implements Combatant {
 
     @Override
     public String toString() {
-        return name + " [" + classeUnita + "/" + team + " PV:" + hp + "/" + maxHp + " @" + posizione + "]";
+        return name + " [" + classeUnita + "/" + team + " PV:" + hp + "/" + maxHp
+            + " @" + posizione + " " + actionState + "]";
     }
 }

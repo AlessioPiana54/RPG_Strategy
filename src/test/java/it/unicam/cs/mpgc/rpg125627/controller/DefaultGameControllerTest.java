@@ -1,5 +1,6 @@
 package it.unicam.cs.mpgc.rpg125627.controller;
 
+import it.unicam.cs.mpgc.rpg125627.model.ActionState;
 import it.unicam.cs.mpgc.rpg125627.model.GamePhase;
 import it.unicam.cs.mpgc.rpg125627.model.GameState;
 import it.unicam.cs.mpgc.rpg125627.model.GridMap;
@@ -52,17 +53,28 @@ class DefaultGameControllerTest {
     }
 
     @Test
-    void selectingNewUnitResetsMovedAndActedFlags() {
+    void cannotSelectExhaustedUnit() {
+        player.onActed(); // READY → EXHAUSTED
+        controller.selectUnit(player.getPosizione());
+        assertNull(controller.getSelectedUnit());
+    }
+
+    @Test
+    void movedUnitRemainsMovedAfterReselect() {
         controller.selectUnit(player.getPosizione());
         controller.moveSelectedUnit(new Position(0, 1));
+        assertEquals(ActionState.MOVED, player.getActionState());
 
-        // Re-select (same unit, new selection resets flags)
+        // Re-selezione: l'unità è ancora MOVED, non deve potersi muovere di nuovo
         controller.selectUnit(player.getPosizione());
-        // Now moving again should succeed if within range from current pos
-        Position beforeSecondMove = player.getPosizione();
-        controller.moveSelectedUnit(new Position(0, 2));
-        assertEquals(new Position(0, 2), player.getPosizione());
-        assertNotEquals(beforeSecondMove, player.getPosizione());
+        assertNotNull(controller.getSelectedUnit(),
+            "Un'unità MOVED deve poter essere riselezionata per usare le abilità");
+        assertEquals(ActionState.MOVED, player.getActionState());
+
+        Position afterFirstMove = player.getPosizione();
+        controller.moveSelectedUnit(new Position(0, 2)); // deve essere ignorato
+        assertEquals(afterFirstMove, player.getPosizione(),
+            "Il secondo tentativo di movimento deve essere ignorato");
     }
 
     // ── moveSelectedUnit ─────────────────────────────────────────────────────
@@ -75,12 +87,19 @@ class DefaultGameControllerTest {
     }
 
     @Test
+    void moveTransitionsToMovedState() {
+        controller.selectUnit(player.getPosizione());
+        controller.moveSelectedUnit(new Position(0, 1));
+        assertEquals(ActionState.MOVED, player.getActionState());
+    }
+
+    @Test
     void cannotMoveTwiceWithoutReselect() {
         controller.selectUnit(player.getPosizione());
         controller.moveSelectedUnit(new Position(0, 1));
         Position posAfterFirstMove = player.getPosizione();
 
-        controller.moveSelectedUnit(new Position(0, 2)); // must be ignored
+        controller.moveSelectedUnit(new Position(0, 2)); // deve essere ignorato
 
         assertEquals(posAfterFirstMove, player.getPosizione());
     }
@@ -95,7 +114,6 @@ class DefaultGameControllerTest {
 
     @Test
     void useAbilityOnAdjacentEnemy() {
-        // Move player next to enemy-like target — use a nearby enemy for the test
         GridMap map2 = new GridMap(4, 4);
         Unit attacker = new Unit("A", UnitClass.WARRIOR, Team.PLAYER, new Position(0, 0));
         Unit defender = new Unit("D", UnitClass.WARRIOR, Team.ENEMY,  new Position(0, 1));
@@ -113,6 +131,23 @@ class DefaultGameControllerTest {
     }
 
     @Test
+    void useAbilityExhaustsUnit() {
+        GridMap map2 = new GridMap(4, 4);
+        Unit attacker = new Unit("A", UnitClass.WARRIOR, Team.PLAYER, new Position(0, 0));
+        Unit defender = new Unit("D", UnitClass.WARRIOR, Team.ENEMY,  new Position(0, 1));
+        attacker.addAbilita(new MeleeAttack("Hit", 5));
+        map2.placeUnit(attacker, attacker.getPosizione());
+        map2.placeUnit(defender, defender.getPosizione());
+        GameState state2 = new GameState(map2, List.of(attacker, defender));
+        DefaultGameController ctrl2 = new DefaultGameController(state2, engine, new SimpleAIStrategy());
+
+        ctrl2.selectUnit(attacker.getPosizione());
+        ctrl2.useAbility(attacker.getAbilita().get(0), defender.getPosizione());
+
+        assertEquals(ActionState.EXHAUSTED, attacker.getActionState());
+    }
+
+    @Test
     void cannotActTwiceWithSameUnit() {
         GridMap map2 = new GridMap(4, 4);
         Unit attacker = new Unit("A", UnitClass.WARRIOR, Team.PLAYER, new Position(0, 0));
@@ -127,7 +162,7 @@ class DefaultGameControllerTest {
         ctrl2.useAbility(attacker.getAbilita().get(0), defender.getPosizione());
         int hpAfterFirst = defender.getHp();
 
-        ctrl2.useAbility(attacker.getAbilita().get(0), defender.getPosizione()); // must be ignored
+        ctrl2.useAbility(attacker.getAbilita().get(0), defender.getPosizione()); // deve essere ignorato
 
         assertEquals(hpAfterFirst, defender.getHp());
     }
@@ -155,8 +190,19 @@ class DefaultGameControllerTest {
     }
 
     @Test
+    void endTurnResetsAllUnitsToReady() {
+        player.onMoved();
+        controller.endTurn();
+        for (Unit u : state.getUnita()) {
+            if (u.isAlive()) {
+                assertEquals(ActionState.READY, u.getActionState(),
+                    u.getName() + " deve essere READY dopo endTurn");
+            }
+        }
+    }
+
+    @Test
     void endTurnDoesNothingWhenGameIsOver() {
-        // Kill enemy so the game is already in VICTORY state
         enemy.takeDamage(enemy.getMaxHp());
         state.checkVictory();
         assertTrue(state.isOver());
@@ -164,6 +210,19 @@ class DefaultGameControllerTest {
         int turnBefore = state.getTurnoCorrente();
         controller.endTurn();
         assertEquals(turnBefore, state.getTurnoCorrente());
+    }
+
+    // ── isEndTurnAvailable ───────────────────────────────────────────────────
+
+    @Test
+    void endTurnNotAvailableWhenPlayerUnitIsReady() {
+        assertFalse(controller.isEndTurnAvailable());
+    }
+
+    @Test
+    void endTurnAvailableWhenAllPlayerUnitsExhausted() {
+        player.onActed();
+        assertTrue(controller.isEndTurnAvailable());
     }
 
     // ── startGame ────────────────────────────────────────────────────────────
@@ -193,6 +252,16 @@ class DefaultGameControllerTest {
 
         assertTrue(undone);
         assertEquals(original, player.getPosizione());
+    }
+
+    @Test
+    void undoMoveRestoresReadyState() {
+        controller.selectUnit(player.getPosizione());
+        controller.moveSelectedUnit(new Position(0, 1));
+        assertEquals(ActionState.MOVED, player.getActionState());
+
+        controller.undoLastCommand();
+        assertEquals(ActionState.READY, player.getActionState());
     }
 
     @Test
