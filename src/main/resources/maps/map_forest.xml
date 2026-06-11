@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<map rows="8" cols="8">
+  <tiles>
+    <!-- Zona foresta nord-ovest (copertura vicino allo spawn giocatore) -->
+    <tile row="0" col="2" type="FOREST"/>
+    <tile row="1" col="2" type="FOREST"/>
+    <tile row="2" col="2" type="FOREST"/>
+    <tile row="2" col="3" type="FOREST"/>
+    <tile row="3" col="1" type="FOREST"/>
+    <tile row="3" col="2" type="FOREST"/>
+    <!-- Barriera montuosa centrale -->
+    <tile row="3" col="4" type="MOUNTAIN"/>
+    <tile row="3" col="5" type="MOUNTAIN"/>
+    <tile row="4" col="4" type="MOUNTAIN"/>
+    <tile row="4" col="5" type="MOUNTAIN"/>
+    <!-- Zona foresta sud-est (copertura vicino allo spawn nemico) -->
+    <tile row="4" col="2" type="FOREST"/>
+    <tile row="5" col="2" type="FOREST"/>
+    <tile row="5" col="5" type="FOREST"/>
+    <tile row="5" col="6" type="FOREST"/>
+    <tile row="6" col="5" type="FOREST"/>
+    <tile row="6" col="6" type="FOREST"/>
+  </tiles>
+  <spawns>
+    <spawn row="0" col="0" unitClass="WARRIOR" team="PLAYER"/>
+    <spawn row="0" col="1" unitClass="MAGE"    team="PLAYER"/>
+    <spawn row="0" col="3" unitClass="ARCHER"  team="PLAYER"/>
+    <spawn row="7" col="7" unitClass="WARRIOR" team="ENEMY"/>
+    <spawn row="7" col="6" unitClass="MAGE"    team="ENEMY"/>
+    <spawn row="7" col="4" unitClass="ARCHER"  team="ENEMY"/>
+  </spawns>
+</map>

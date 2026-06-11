@@ -9,11 +9,11 @@ public enum UnitClass {
     /** Combattente in prima linea, corazzato e con portata ridotta. */
     WARRIOR(120, 3, 1),
 
-    /** Incantatore fragile ma con gittata di attacco elevata. */
-    MAGE(70, 2, 4),
+    /** Incantatore fragile ma con gittata di attacco media. */
+    MAGE(80, 2, 3),
 
     /** Combattente a distanza equilibrato tra mobilità e portata. */
-    ARCHER(90, 3, 3);
+    ARCHER(90, 3, 2);
 
     private final int baseHp;
     private final int moveRange;

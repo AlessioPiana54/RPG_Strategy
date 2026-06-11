@@ -43,13 +43,22 @@ public class XmlGameRepository implements Repository<GameState> {
                     MeleeAttack.class,
                     RangedAttack.class,
                     HealAbility.class,
-                    Tile.class
+                    Tile.class,
+                    XmlMap.class,
+                    XmlTile.class,
+                    XmlUnitSpawn.class
             );
         } catch (JAXBException e) {
             throw new ExceptionInInitializerError(
                     "Inizializzazione JAXBContext fallita: " + e.getMessage());
         }
     }
+
+    /**
+     * Restituisce il {@link JAXBContext} condiviso del progetto.
+     * Usato da {@link MapLoader} per evitare di istanziare un secondo contesto.
+     */
+    public static JAXBContext getContext() { return CONTEXT; }
 
     private final Path savesDir;
 

@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<map rows="6" cols="6">
+  <tiles>
+    <!-- Tutto PLAIN: nessun ostacolo, unità ravvicinate per partite veloci -->
+  </tiles>
+  <spawns>
+    <spawn row="0" col="0" unitClass="WARRIOR" team="PLAYER"/>
+    <spawn row="1" col="0" unitClass="MAGE"    team="PLAYER"/>
+    <spawn row="2" col="0" unitClass="ARCHER"  team="PLAYER"/>
+    <spawn row="0" col="5" unitClass="WARRIOR" team="ENEMY"/>
+    <spawn row="1" col="5" unitClass="MAGE"    team="ENEMY"/>
+    <spawn row="2" col="5" unitClass="ARCHER"  team="ENEMY"/>
+  </spawns>
+</map>
