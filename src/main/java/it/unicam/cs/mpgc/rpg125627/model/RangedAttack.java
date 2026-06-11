@@ -1,14 +1,24 @@
 package it.unicam.cs.mpgc.rpg125627.model;
 
+import jakarta.xml.bind.annotation.XmlAccessType;
+import jakarta.xml.bind.annotation.XmlAccessorType;
+import jakarta.xml.bind.annotation.XmlAttribute;
+import jakarta.xml.bind.annotation.XmlRootElement;
+
 /**
  * Attacco a proiettile che può raggiungere bersagli oltre le celle adiacenti.
  * È responsabilità del chiamante verificare i vincoli di gittata prima di invocare {@link #apply}.
  */
+@XmlRootElement(name = "ranged")
+@XmlAccessorType(XmlAccessType.FIELD)
 public final class RangedAttack implements Ability {
 
-    private final String name;
-    private final int danno;
-    private final int gittata;
+    @XmlAttribute private String name;
+    @XmlAttribute private int danno;
+    @XmlAttribute private int gittata;
+
+    /** Costruttore senza argomenti richiesto da JAXB. */
+    protected RangedAttack() {}
 
     /**
      * @param name    nome visualizzato (es. "Tiro con l'Arco")

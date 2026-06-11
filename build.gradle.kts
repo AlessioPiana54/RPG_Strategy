@@ -15,6 +15,8 @@ repositories {
 }
 
 dependencies {
+    implementation("jakarta.xml.bind:jakarta.xml.bind-api:4.0.2")
+    runtimeOnly("com.sun.xml.bind:jaxb-impl:4.0.5")
     testImplementation("org.junit.jupiter:junit-jupiter:5.10.3")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }

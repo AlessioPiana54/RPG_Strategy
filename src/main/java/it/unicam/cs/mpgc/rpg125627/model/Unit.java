@@ -1,5 +1,12 @@
 package it.unicam.cs.mpgc.rpg125627.model;
 
+import jakarta.xml.bind.annotation.XmlAccessType;
+import jakarta.xml.bind.annotation.XmlAccessorType;
+import jakarta.xml.bind.annotation.XmlAttribute;
+import jakarta.xml.bind.annotation.XmlElement;
+import jakarta.xml.bind.annotation.XmlElements;
+import jakarta.xml.bind.annotation.XmlRootElement;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -12,15 +19,28 @@ import java.util.Objects;
  * viva finché {@code hp > 0}. La validazione di gittata di movimento e di turno spetta
  * al livello di logica di gioco, non a questa classe.</p>
  */
+@XmlRootElement(name = "unit")
+@XmlAccessorType(XmlAccessType.FIELD)
 public class Unit implements Combatant {
 
-    private final String name;
-    private final UnitClass classeUnita;
-    private final Team team;
-    private final int maxHp;
-    private int hp;
+    @XmlAttribute private String name;
+    @XmlAttribute private UnitClass classeUnita;
+    @XmlAttribute private Team team;
+    @XmlAttribute private int maxHp;
+    @XmlAttribute private int hp;
+
+    @XmlElement(name = "position")
     private Position posizione;
-    private final List<Ability> abilita;
+
+    @XmlElements({
+        @XmlElement(name = "melee",  type = MeleeAttack.class),
+        @XmlElement(name = "ranged", type = RangedAttack.class),
+        @XmlElement(name = "heal",   type = HealAbility.class)
+    })
+    private List<Ability> abilita = new ArrayList<>();
+
+    /** Costruttore senza argomenti richiesto da JAXB. */
+    protected Unit() {}
 
     /**
      * Crea un'unità posizionata in {@code posizioneIniziale}.

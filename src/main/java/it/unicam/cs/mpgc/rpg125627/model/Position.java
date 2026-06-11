@@ -1,5 +1,7 @@
 package it.unicam.cs.mpgc.rpg125627.model;
 
+import jakarta.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
+
 /**
  * Coordinata immutabile sulla griglia espressa come coppia (riga, colonna).
  * Utilizza la distanza di Manhattan come metrica standard per il movimento su griglia.
@@ -7,6 +9,7 @@ package it.unicam.cs.mpgc.rpg125627.model;
  * @param row indice di riga a base zero (dall'alto verso il basso)
  * @param col indice di colonna a base zero (da sinistra verso destra)
  */
+@XmlJavaTypeAdapter(PositionAdapter.class)
 public record Position(int row, int col) {
 
     /**

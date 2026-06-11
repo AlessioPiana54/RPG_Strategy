@@ -1,13 +1,23 @@
 package it.unicam.cs.mpgc.rpg125627.model;
 
+import jakarta.xml.bind.annotation.XmlAccessType;
+import jakarta.xml.bind.annotation.XmlAccessorType;
+import jakarta.xml.bind.annotation.XmlAttribute;
+import jakarta.xml.bind.annotation.XmlRootElement;
+
 /**
  * Ripristina punti vita a un'unità bersaglio senza superarne il massimo.
  * Può essere usata su alleati o sul lanciatore stesso.
  */
+@XmlRootElement(name = "heal")
+@XmlAccessorType(XmlAccessType.FIELD)
 public final class HealAbility implements Ability {
 
-    private final String name;
-    private final int quantitaCura;
+    @XmlAttribute private String name;
+    @XmlAttribute private int quantitaCura;
+
+    /** Costruttore senza argomenti richiesto da JAXB. */
+    protected HealAbility() {}
 
     /**
      * @param name         nome visualizzato (es. "Cura")

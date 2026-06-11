@@ -1,5 +1,12 @@
 package it.unicam.cs.mpgc.rpg125627.model;
 
+import jakarta.xml.bind.Unmarshaller;
+import jakarta.xml.bind.annotation.XmlAccessType;
+import jakarta.xml.bind.annotation.XmlAccessorType;
+import jakarta.xml.bind.annotation.XmlAttribute;
+import jakarta.xml.bind.annotation.XmlElement;
+import jakarta.xml.bind.annotation.XmlRootElement;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -13,12 +20,23 @@ import java.util.Objects;
  * Una volta che la fase diventa {@link GamePhase#VICTORY} o {@link GamePhase#DEFEAT},
  * la battaglia è conclusa e {@link #nextTurn()} diventa un'operazione nulla.</p>
  */
+@XmlRootElement(name = "gameState")
+@XmlAccessorType(XmlAccessType.FIELD)
 public class GameState {
 
-    private final GridMap mappa;
-    private final List<Unit> unita;
-    private int turnoCorrente;
-    private GamePhase fase;
+    @XmlElement(name = "map")
+    private GridMap mappa;
+
+    @XmlElement(name = "unit")
+    private List<Unit> unita;
+
+    @XmlAttribute private int turnoCorrente;
+    @XmlAttribute private GamePhase fase;
+
+    /** Costruttore senza argomenti richiesto da JAXB. */
+    protected GameState() {
+        this.unita = new ArrayList<>();
+    }
 
     /**
      * Crea un nuovo stato di gioco. La battaglia inizia al turno 1 con il giocatore che agisce per primo.
@@ -31,6 +49,26 @@ public class GameState {
         this.unita         = new ArrayList<>(Objects.requireNonNull(unita, "unita"));
         this.turnoCorrente = 1;
         this.fase          = GamePhase.PLAYER_TURN;
+    }
+
+    // ── Ciclo di vita JAXB ───────────────────────────────────────────────────
+
+    /**
+     * Chiamato da JAXB dopo l'unmarshalling: ripristina le unità vive sulla mappa.
+     * Necessario perché {@link Tile#occupante} è {@code @XmlTransient}.
+     */
+    @SuppressWarnings("unused")
+    private void afterUnmarshal(Unmarshaller unmarshaller, Object parent) {
+        if (mappa == null || unita == null) return;
+        for (Unit unit : unita) {
+            if (unit.isAlive() && unit.getPosizione() != null) {
+                try {
+                    mappa.placeUnit(unit, unit.getPosizione());
+                } catch (IllegalStateException ignored) {
+                    // Non dovrebbe mai accadere con un salvataggio valido
+                }
+            }
+        }
     }
 
     // ── Accessori ────────────────────────────────────────────────────────────
@@ -67,7 +105,6 @@ public class GameState {
                 turnoCorrente++;
                 yield GamePhase.PLAYER_TURN;
             }
-            // La battaglia è già decisa: non si avanza
             case VICTORY, DEFEAT -> fase;
         };
     }

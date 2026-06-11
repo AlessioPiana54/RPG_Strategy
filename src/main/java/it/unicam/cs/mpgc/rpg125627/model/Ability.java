@@ -1,5 +1,7 @@
 package it.unicam.cs.mpgc.rpg125627.model;
 
+import jakarta.xml.bind.annotation.XmlSeeAlso;
+
 /**
  * Capacità sigillata che un'{@link Unit} può utilizzare durante il combattimento.
  * Le implementazioni ammesse coprono i tre archetipi principali:
@@ -8,6 +10,7 @@ package it.unicam.cs.mpgc.rpg125627.model;
  * <p>Essendo sigillata, le espressioni {@code switch} esaustive sulle abilità
  * non richiedono alcun ramo {@code default}, abilitando il pattern matching sicuro.</p>
  */
+@XmlSeeAlso({MeleeAttack.class, RangedAttack.class, HealAbility.class})
 public sealed interface Ability permits MeleeAttack, RangedAttack, HealAbility {
 
     /**

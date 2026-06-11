@@ -1,15 +1,26 @@
 package it.unicam.cs.mpgc.rpg125627.model;
 
+import jakarta.xml.bind.annotation.XmlAccessType;
+import jakarta.xml.bind.annotation.XmlAccessorType;
+import jakarta.xml.bind.annotation.XmlAttribute;
+import jakarta.xml.bind.annotation.XmlRootElement;
+import jakarta.xml.bind.annotation.XmlTransient;
+
 import java.util.Optional;
 
 /**
  * Singola cella della {@link GridMap}.
  * Ogni cella ha un tipo di terreno fisso e può ospitare al massimo un'{@link Unit}.
  */
+@XmlRootElement(name = "tile")
+@XmlAccessorType(XmlAccessType.FIELD)
 public class Tile {
 
-    private final TileType tipo;
-    private Unit occupante;
+    @XmlAttribute private TileType tipo;
+    @XmlTransient private Unit occupante;
+
+    /** Costruttore senza argomenti richiesto da JAXB. */
+    protected Tile() {}
 
     /**
      * @param tipo categoria di terreno; non deve essere {@code null}
