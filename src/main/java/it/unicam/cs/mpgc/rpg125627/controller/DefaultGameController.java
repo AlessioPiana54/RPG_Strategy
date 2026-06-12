@@ -31,6 +31,7 @@ public class DefaultGameController implements GameController {
     private final BattleEngine battleEngine;
     private final AIStrategy aiStrategy;
     private final TurnManager turnManager;
+    private final MoveValidator moveValidator = new MoveValidator();
     private final Deque<GameCommand> commandHistory = new ArrayDeque<>();
 
     private Unit selectedUnit;
@@ -81,7 +82,7 @@ public class DefaultGameController implements GameController {
     public void moveSelectedUnit(Position target) {
         Objects.requireNonNull(target, "target");
         if (selectedUnit == null || !isActiveTurn()) return;
-        if (selectedUnit.getActionState() != ActionState.READY) return;
+        if (!moveValidator.canMove(selectedUnit, target, gameState.getMappa())) return;
 
         MoveCommand cmd = new MoveCommand(selectedUnit, target, battleEngine, gameState.getMappa());
         cmd.execute();
@@ -98,7 +99,7 @@ public class DefaultGameController implements GameController {
         Objects.requireNonNull(ability,         "ability");
         Objects.requireNonNull(targetPosition,  "targetPosition");
         if (selectedUnit == null || !isActiveTurn()) return;
-        if (selectedUnit.getActionState() == ActionState.EXHAUSTED) return;
+        if (!moveValidator.canAct(selectedUnit)) return;
 
         gameState.getMappa().getUnit(targetPosition).ifPresent(target -> {
             AbilityCommand cmd = new AbilityCommand(

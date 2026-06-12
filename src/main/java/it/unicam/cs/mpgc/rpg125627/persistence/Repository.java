@@ -29,7 +29,7 @@ public interface Repository<T> {
 
     /**
      * @return lista dei nomi dei salvataggi disponibili, in ordine alfabetico
-     */
+     */ // utilizzabile da UI in future implementazioni
     List<String> listSaves();
 
     /**
@@ -37,6 +37,6 @@ public interface Repository<T> {
      *
      * @param name il nome del salvataggio (senza estensione)
      * @throws Exception se la cancellazione fallisce
-     */
+     */ // utilizzabile da UI in future implementazioni
     void delete(String name) throws Exception;
 }

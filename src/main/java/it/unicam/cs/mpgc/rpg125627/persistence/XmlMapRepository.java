@@ -13,15 +13,14 @@ import java.util.Arrays;
 import java.util.List;
 
 /**
- * Carica le mappe XML da {@code src/main/resources/maps/} e le converte
- * in un {@link GameState} iniziale tramite {@link ScenarioFactory}.
+ * Implementazione di {@link MapRepository} che carica le mappe XML da
+ * {@code src/main/resources/maps/} e le converte in un {@link GameState} iniziale
+ * tramite {@link ScenarioFactory}.
  *
- * <p>Usa il {@link JAXBContext} condiviso del progetto ({@link XmlGameRepository#getContext()})
- * anziché crearne uno nuovo. La deserializzazione avviene con il metodo tipizzato
- * {@code unmarshal(Source, Class)} per gestire correttamente la condivisione del
- * nome radice {@code "map"} con {@link it.unicam.cs.mpgc.rpg125627.model.GridMap}.</p>
+ * <p>Usa il {@link jakarta.xml.bind.JAXBContext} condiviso del progetto
+ * ({@link XmlGameRepository#getContext()}) anziché crearne uno nuovo.</p>
  */
-public class MapLoader {
+public class XmlMapRepository implements MapRepository {
 
     /**
      * Carica la mappa con il nome indicato da {@code maps/<nome>.xml} nel classpath
@@ -31,6 +30,7 @@ public class MapLoader {
      * @return stato di gioco iniziale
      * @throws MapLoadException se il file non esiste o contiene XML malformato
      */
+    @Override
     public GameState loadMap(String mapName) throws MapLoadException {
         String resourcePath = "maps/" + mapName + ".xml";
         InputStream is = getClass().getClassLoader().getResourceAsStream(resourcePath);
@@ -56,6 +56,7 @@ public class MapLoader {
      *
      * @return lista ordinata dei nomi delle mappe
      */
+    @Override
     public List<String> listAvailableMaps() {
         URL url = getClass().getClassLoader().getResource("maps");
         if (url == null) return List.of();

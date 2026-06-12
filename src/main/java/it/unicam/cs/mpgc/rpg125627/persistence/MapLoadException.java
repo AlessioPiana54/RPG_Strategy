@@ -1,7 +1,7 @@
 package it.unicam.cs.mpgc.rpg125627.persistence;
 
 /**
- * Eccezione controllata lanciata da {@link MapLoader} quando un file di mappa
+ * Eccezione controllata lanciata da {@link XmlMapRepository} quando un file di mappa
  * non esiste, non è leggibile o contiene XML malformato.
  */
 public class MapLoadException extends Exception {

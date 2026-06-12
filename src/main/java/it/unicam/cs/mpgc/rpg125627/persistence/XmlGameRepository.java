@@ -56,7 +56,7 @@ public class XmlGameRepository implements Repository<GameState> {
 
     /**
      * Restituisce il {@link JAXBContext} condiviso del progetto.
-     * Usato da {@link MapLoader} per evitare di istanziare un secondo contesto.
+     * Usato da {@link XmlMapRepository} per evitare di istanziare un secondo contesto.
      */
     public static JAXBContext getContext() { return CONTEXT; }
 

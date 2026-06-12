@@ -58,6 +58,11 @@ public final class MeleeAttack implements Ability {
         }
     }
 
+    @Override
+    public boolean isValidTarget(Unit sorgente, Unit bersaglio) {
+        return sorgente.getPosizione().distanceTo(bersaglio.getPosizione()) <= 1;
+    }
+
     /** @return valore grezzo di danno di questo attacco */
     public int getDanno() { return danno; }
 

@@ -2,10 +2,7 @@ package it.unicam.cs.mpgc.rpg125627.controller;
 
 import it.unicam.cs.mpgc.rpg125627.model.Ability;
 import it.unicam.cs.mpgc.rpg125627.model.GridMap;
-import it.unicam.cs.mpgc.rpg125627.model.HealAbility;
-import it.unicam.cs.mpgc.rpg125627.model.MeleeAttack;
 import it.unicam.cs.mpgc.rpg125627.model.Position;
-import it.unicam.cs.mpgc.rpg125627.model.RangedAttack;
 import it.unicam.cs.mpgc.rpg125627.model.Team;
 import it.unicam.cs.mpgc.rpg125627.model.Unit;
 
@@ -15,23 +12,38 @@ import java.util.Objects;
 
 /**
  * Esegue le azioni di movimento e uso delle abilità, calcola gli esiti in base alle
- * statistiche delle unità e notifica gli observer {@link GameEventListener} registrati.
+ * statistiche delle unità e notifica gli observer registrati.
  *
  * <p>Questa classe è volutamente priva di dipendenze da JavaFX, in modo da poter essere
  * testata in isolamento con semplici test JUnit.</p>
  */
 public class BattleEngine {
 
-    private final List<GameEventListener> listeners = new ArrayList<>();
+    private final List<UnitEventListener> unitListeners = new ArrayList<>();
+    private final List<TurnEventListener> turnListeners = new ArrayList<>();
 
     // ── Gestione dei listener ────────────────────────────────────────────────
 
+    /** Registra un listener completo per tutti gli eventi di unità e di turno. */
     public void addListener(GameEventListener listener) {
-        listeners.add(Objects.requireNonNull(listener, "listener"));
+        Objects.requireNonNull(listener, "listener");
+        unitListeners.add(listener);
+        turnListeners.add(listener);
+    }
+
+    /** Registra un listener interessato solo agli eventi di unità. */
+    public void addUnitListener(UnitEventListener listener) {
+        unitListeners.add(Objects.requireNonNull(listener, "listener"));
+    }
+
+    /** Registra un listener interessato solo ai cambi di turno. */
+    public void addTurnListener(TurnEventListener listener) {
+        turnListeners.add(Objects.requireNonNull(listener, "listener"));
     }
 
     public void removeListener(GameEventListener listener) {
-        listeners.remove(listener);
+        unitListeners.remove(listener);
+        turnListeners.remove(listener);
     }
 
     // ── Azioni ───────────────────────────────────────────────────────────────
@@ -65,12 +77,11 @@ public class BattleEngine {
     }
 
     /**
-     * Applica {@code ability} da {@code attacker} a {@code target}, valida la gittata
-     * e notifica {@code onUnitAttacked} (e {@code onUnitDefeated} quando il bersaglio muore).
-     * Il danno è ricavato dai parametri dell'abilità stessa.
+     * Applica {@code ability} da {@code attacker} a {@code target}, valida il bersaglio
+     * tramite {@link Ability#isValidTarget} e notifica {@code onUnitAttacked}
+     * (e {@code onUnitDefeated} quando il bersaglio muore).
      *
-     * @throws IllegalArgumentException se il bersaglio è fuori gittata o il vincolo
-     *                                  di team dell'abilità viene violato
+     * @throws IllegalArgumentException se il bersaglio non è valido per l'abilità
      */
     public void executeAbility(Unit attacker, Ability ability, Unit target, GridMap map) {
         Objects.requireNonNull(attacker, "attacker");
@@ -78,7 +89,11 @@ public class BattleEngine {
         Objects.requireNonNull(target,   "target");
         Objects.requireNonNull(map,      "map");
 
-        validateAbilityRange(attacker, ability, target);
+        if (!ability.isValidTarget(attacker, target)) {
+            throw new IllegalArgumentException(
+                "Bersaglio non valido per " + attacker.getName()
+                + " con abilità '" + ability.getName() + "'");
+        }
 
         int hpBefore = target.getHp();
         attacker.useAbility(ability, target);
@@ -102,46 +117,22 @@ public class BattleEngine {
 
     /** Notifica {@code onTurnChanged} a tutti i listener registrati. */
     public void fireTurnChanged(Team team, int turnNumber) {
-        for (GameEventListener l : listeners) {
+        for (TurnEventListener l : turnListeners) {
             l.onTurnChanged(team, turnNumber);
-        }
-    }
-
-    // ── Validazione ──────────────────────────────────────────────────────────
-
-    private void validateAbilityRange(Unit attacker, Ability ability, Unit target) {
-        int distance = attacker.getPosizione().distanceTo(target.getPosizione());
-        switch (ability) {
-            case MeleeAttack _ -> {
-                if (distance > 1)
-                    throw new IllegalArgumentException(
-                        "Il bersaglio è troppo lontano per un attacco corpo a corpo (distanza=" + distance + ")");
-            }
-            case RangedAttack r -> {
-                if (distance > r.getGittata())
-                    throw new IllegalArgumentException(
-                        "Il bersaglio è fuori gittata (distanza=" + distance
-                        + ", gittata=" + r.getGittata() + ")");
-            }
-            case HealAbility _ -> {
-                if (attacker.getTeam() != target.getTeam())
-                    throw new IllegalArgumentException(
-                        "Non è possibile curare un'unità del team avversario");
-            }
         }
     }
 
     // ── Notifica degli eventi ────────────────────────────────────────────────
 
     private void fireUnitMoved(Unit unit, Position from, Position to) {
-        for (GameEventListener l : listeners) l.onUnitMoved(unit, from, to);
+        for (UnitEventListener l : unitListeners) l.onUnitMoved(unit, from, to);
     }
 
     private void fireUnitAttacked(Unit attacker, Unit target, int damage) {
-        for (GameEventListener l : listeners) l.onUnitAttacked(attacker, target, damage);
+        for (UnitEventListener l : unitListeners) l.onUnitAttacked(attacker, target, damage);
     }
 
     private void fireUnitDefeated(Unit unit) {
-        for (GameEventListener l : listeners) l.onUnitDefeated(unit);
+        for (UnitEventListener l : unitListeners) l.onUnitDefeated(unit);
     }
 }

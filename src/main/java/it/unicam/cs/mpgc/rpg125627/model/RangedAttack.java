@@ -46,6 +46,11 @@ public final class RangedAttack implements Ability {
         bersaglio.takeDamage(danno);
     }
 
+    @Override
+    public boolean isValidTarget(Unit sorgente, Unit bersaglio) {
+        return sorgente.getPosizione().distanceTo(bersaglio.getPosizione()) <= gittata;
+    }
+
     /** @return valore grezzo di danno di questo attacco */
     public int getDanno() { return danno; }
 

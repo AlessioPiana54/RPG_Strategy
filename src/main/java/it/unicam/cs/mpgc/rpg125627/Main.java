@@ -2,16 +2,17 @@ package it.unicam.cs.mpgc.rpg125627;
 
 import it.unicam.cs.mpgc.rpg125627.controller.BattleEngine;
 import it.unicam.cs.mpgc.rpg125627.controller.DefaultGameController;
-import it.unicam.cs.mpgc.rpg125627.controller.GameEventListener;
 import it.unicam.cs.mpgc.rpg125627.controller.SimpleAIStrategy;
+import it.unicam.cs.mpgc.rpg125627.controller.TurnEventListener;
+import it.unicam.cs.mpgc.rpg125627.controller.UnitEventListener;
 import it.unicam.cs.mpgc.rpg125627.model.GameState;
-import it.unicam.cs.mpgc.rpg125627.model.Position;
 import it.unicam.cs.mpgc.rpg125627.model.Team;
 import it.unicam.cs.mpgc.rpg125627.model.Unit;
 import it.unicam.cs.mpgc.rpg125627.persistence.MapLoadException;
-import it.unicam.cs.mpgc.rpg125627.persistence.MapLoader;
+import it.unicam.cs.mpgc.rpg125627.persistence.MapRepository;
 import it.unicam.cs.mpgc.rpg125627.persistence.SaveManager;
 import it.unicam.cs.mpgc.rpg125627.persistence.XmlGameRepository;
+import it.unicam.cs.mpgc.rpg125627.persistence.XmlMapRepository;
 import it.unicam.cs.mpgc.rpg125627.view.ActionBar;
 import it.unicam.cs.mpgc.rpg125627.view.EndGameView;
 import it.unicam.cs.mpgc.rpg125627.view.GameViewController;
@@ -30,6 +31,7 @@ import javafx.scene.control.TextInputDialog;
 import javafx.stage.Stage;
 
 import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * Punto di ingresso dell'applicazione.
@@ -45,7 +47,7 @@ public class Main extends Application {
 
     private Stage primaryStage;
     private final XmlGameRepository repository = new XmlGameRepository();
-    private final MapLoader mapLoader           = new MapLoader();
+    private final MapRepository mapLoader       = new XmlMapRepository();
 
     @Override
     public void start(Stage stage) {
@@ -91,29 +93,25 @@ public class Main extends Application {
 
         new GameViewController(controller, battleEngine, mapView, unitPanel, actionBar);
 
-        // Gestore end-game: controlla dopo ogni sconfitta/cambio turno
-        battleEngine.addListener(new GameEventListener() {
-            private volatile boolean shown = false;
+        // Gestore end-game: flag condiviso tra i due listener per mostrare la schermata una volta sola
+        final AtomicBoolean shown = new AtomicBoolean(false);
 
-            @Override public void onUnitMoved(Unit u, Position from, Position to) {}
-            @Override public void onUnitAttacked(Unit a, Unit t, int d) {}
-
+        battleEngine.addUnitListener(new UnitEventListener() {
             @Override
             public void onUnitDefeated(Unit u) {
-                Platform.runLater(() -> checkAndShowEndGame(gameState, currentMapName));
+                Platform.runLater(() -> {
+                    if (!gameState.isOver() || shown.getAndSet(true)) return;
+                    Platform.runLater(() -> showEndGameScreen(gameState, currentMapName));
+                });
             }
+        });
 
+        battleEngine.addTurnListener(new TurnEventListener() {
             @Override
             public void onTurnChanged(Team newTeam, int turnNumber) {
-                checkAndShowEndGame(gameState, currentMapName);
-            }
-
-            private void checkAndShowEndGame(GameState gs, String mapName) {
-                if (!gs.isOver() || shown) return;
-                shown = true;
-                // Rimanda leggermente per lasciare che GameViewController completi i suoi runLater
+                if (!gameState.isOver() || shown.getAndSet(true)) return;
                 Platform.runLater(() -> Platform.runLater(() ->
-                        showEndGameScreen(gs, mapName)));
+                        showEndGameScreen(gameState, currentMapName)));
             }
         });
 

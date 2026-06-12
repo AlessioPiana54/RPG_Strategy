@@ -30,4 +30,14 @@ public sealed interface Ability permits MeleeAttack, RangedAttack, HealAbility {
      * @param bersaglio l'unità che riceve l'effetto (può coincidere con la sorgente per le autocure)
      */
     void apply(Unit sorgente, Unit bersaglio);
+
+    /**
+     * Verifica se {@code bersaglio} è un bersaglio valido per questa abilità usata da {@code sorgente}.
+     * Controlla gittata e vincoli di team senza lanciare eccezioni.
+     *
+     * @param sorgente  l'unità che usa l'abilità
+     * @param bersaglio l'unità bersaglio
+     * @return {@code true} se il bersaglio è raggiungibile e il vincolo di team è rispettato
+     */
+    boolean isValidTarget(Unit sorgente, Unit bersaglio);
 }

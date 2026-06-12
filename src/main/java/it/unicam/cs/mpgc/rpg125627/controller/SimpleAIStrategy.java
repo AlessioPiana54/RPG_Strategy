@@ -4,10 +4,7 @@ import it.unicam.cs.mpgc.rpg125627.model.Ability;
 import it.unicam.cs.mpgc.rpg125627.model.ActionState;
 import it.unicam.cs.mpgc.rpg125627.model.GameState;
 import it.unicam.cs.mpgc.rpg125627.model.GridMap;
-import it.unicam.cs.mpgc.rpg125627.model.HealAbility;
-import it.unicam.cs.mpgc.rpg125627.model.MeleeAttack;
 import it.unicam.cs.mpgc.rpg125627.model.Position;
-import it.unicam.cs.mpgc.rpg125627.model.RangedAttack;
 import it.unicam.cs.mpgc.rpg125627.model.Team;
 import it.unicam.cs.mpgc.rpg125627.model.Unit;
 
@@ -121,15 +118,10 @@ public class SimpleAIStrategy implements AIStrategy {
             .orElse(start);
     }
 
-    /** Restituisce la prima abilità offensiva che raggiunge {@code target} dalla posizione corrente. */
+    /** Restituisce la prima abilità che può raggiungere {@code target} dalla posizione corrente. */
     private Optional<Ability> findOffensiveAbility(Unit unit, Unit target, GridMap map) {
-        int distance = unit.getPosizione().distanceTo(target.getPosizione());
         return unit.getAbilita().stream()
-            .filter(ability -> switch (ability) {
-                case MeleeAttack _  -> distance <= 1;
-                case RangedAttack r -> distance <= r.getGittata();
-                case HealAbility _  -> false;
-            })
+            .filter(ability -> ability.isValidTarget(unit, target))
             .findFirst();
     }
 }

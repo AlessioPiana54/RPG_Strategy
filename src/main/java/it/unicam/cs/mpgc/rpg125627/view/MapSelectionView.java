@@ -17,7 +17,7 @@ import java.util.function.Consumer;
  * Schermata iniziale di selezione mappa.
  *
  * <p>Mostra l'elenco delle mappe disponibili lette da {@code resources/maps/}
- * tramite {@link it.unicam.cs.mpgc.rpg125627.persistence.MapLoader#listAvailableMaps()}.
+ * tramite {@link it.unicam.cs.mpgc.rpg125627.persistence.XmlMapRepository#listAvailableMaps()}.
  * L'utente seleziona una voce e preme "Inizia partita".</p>
  */
 public class MapSelectionView extends BorderPane {

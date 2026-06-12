@@ -42,6 +42,11 @@ public final class HealAbility implements Ability {
         bersaglio.heal(quantitaCura);
     }
 
+    @Override
+    public boolean isValidTarget(Unit sorgente, Unit bersaglio) {
+        return sorgente.getTeam() == bersaglio.getTeam();
+    }
+
     /** @return quantità di PV ripristinati da questa abilità */
     public int getQuantitaCura() { return quantitaCura; }
 }
