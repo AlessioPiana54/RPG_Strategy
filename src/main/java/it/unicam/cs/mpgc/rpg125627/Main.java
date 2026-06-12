@@ -62,6 +62,7 @@ public class Main extends Application {
         List<String> maps = mapLoader.listAvailableMaps();
         MapSelectionView view = new MapSelectionView(maps);
         view.setOnMapSelected(this::startGameFromMap);
+        view.setOnLoadGame(this::showLoadDialog);
         primaryStage.setScene(new Scene(view, 1100, 720));
     }
 
@@ -99,7 +100,7 @@ public class Main extends Application {
 
             @Override
             public void onUnitDefeated(Unit u) {
-                checkAndShowEndGame(gameState, currentMapName);
+                Platform.runLater(() -> checkAndShowEndGame(gameState, currentMapName));
             }
 
             @Override

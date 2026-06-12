@@ -38,6 +38,7 @@ javafx {
 
 application {
     mainClass = "it.unicam.cs.mpgc.rpg125627.Main"
+    applicationDefaultJvmArgs = listOf("--enable-native-access=javafx.graphics")
 }
 
 tasks.named<ShadowJar>("shadowJar") {

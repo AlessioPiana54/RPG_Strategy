@@ -70,6 +70,7 @@ public class GameViewController implements GameEventListener {
         actionBar.setOnUndo(this::onUndo);
 
         controller.startGame();
+        Platform.runLater(this::fullRefresh);
     }
 
     // ── Gestione clic sulla cella ─────────────────────────────────────────────
@@ -87,9 +88,12 @@ public class GameViewController implements GameEventListener {
 
     private void handleIdleClick(Position pos, GameState gs) {
         Optional<Unit> unit = gs.getMappa().getUnit(pos);
-        if (unit.isPresent() && unit.get().getTeam() == Team.PLAYER
+        if (unit.isEmpty()) return;
+        if (unit.get().getTeam() == Team.PLAYER
                 && unit.get().getActionState() != ActionState.EXHAUSTED) {
             doSelectUnit(unit.get(), pos);
+        } else if (unit.get().getTeam() == Team.ENEMY) {
+            unitInfoPanel.showEnemyUnit(unit.get());
         }
     }
 
@@ -124,7 +128,9 @@ public class GameViewController implements GameEventListener {
             return;
         }
 
-        if (unitOpt.isEmpty()) {
+        if (unitOpt.isPresent() && unitOpt.get().getTeam() == Team.ENEMY) {
+            unitInfoPanel.showEnemyUnit(unitOpt.get());
+        } else if (unitOpt.isEmpty()) {
             doDeselect();
         }
     }

@@ -116,6 +116,21 @@ public class UnitInfoPanel extends VBox {
         abilitiesBox.getChildren().forEach(n -> n.setDisable(!enabled));
     }
 
+    /** Mostra le info di un'unità nemica in sola lettura (abilità non cliccabili). */
+    public void showEnemyUnit(Unit unit) {
+        nameLabel.setText(unit.getName());
+        classLabel.setText("Classe: " + unit.getClasseUnita().name() + " [NEMICO]");
+        updateHp(unit);
+
+        abilitiesBox.getChildren().clear();
+        for (Ability ability : unit.getAbilita()) {
+            Label lbl = new Label("• " + ability.getName());
+            lbl.setStyle("-fx-text-fill: #e06060; -fx-font-size: 11;");
+            lbl.setTooltip(new Tooltip(ability.getDescription()));
+            abilitiesBox.getChildren().add(lbl);
+        }
+    }
+
     /** Svuota il pannello (nessuna unità selezionata). */
     public void clear() {
         nameLabel.setText("—");

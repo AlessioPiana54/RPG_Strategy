@@ -15,18 +15,30 @@ public final class MeleeAttack implements Ability {
 
     @XmlAttribute private String name;
     @XmlAttribute private int danno;
+    @XmlAttribute private int contraccolpo;
 
     /** Costruttore senza argomenti richiesto da JAXB. */
     protected MeleeAttack() {}
 
     /**
      * @param name  nome visualizzato (es. "Colpo di Spada")
-     * @param danno danno grezzo inflitto prima di eventuali futuri modificatori di difesa
+     * @param danno danno grezzo inflitto al bersaglio
      */
     public MeleeAttack(String name, int danno) {
-        if (danno < 0) throw new IllegalArgumentException("Il danno non può essere negativo");
-        this.name  = name;
-        this.danno = danno;
+        this(name, danno, 0);
+    }
+
+    /**
+     * @param name         nome visualizzato (es. "Scudo Frantumato")
+     * @param danno        danno grezzo inflitto al bersaglio
+     * @param contraccolpo danno inflitto all'attaccante stesso dopo il colpo
+     */
+    public MeleeAttack(String name, int danno, int contraccolpo) {
+        if (danno < 0)        throw new IllegalArgumentException("Il danno non può essere negativo");
+        if (contraccolpo < 0) throw new IllegalArgumentException("Il contraccolpo non può essere negativo");
+        this.name         = name;
+        this.danno        = danno;
+        this.contraccolpo = contraccolpo;
     }
 
     @Override
@@ -34,14 +46,21 @@ public final class MeleeAttack implements Ability {
 
     @Override
     public String getDescription() {
-        return "Infligge " + danno + " danni a un bersaglio adiacente.";
+        String base = "Infligge " + danno + " danni a un bersaglio adiacente.";
+        return contraccolpo > 0 ? base + " Contraccolpo: " + contraccolpo + " danni all'attaccante." : base;
     }
 
     @Override
     public void apply(Unit sorgente, Unit bersaglio) {
         bersaglio.takeDamage(danno);
+        if (contraccolpo > 0) {
+            sorgente.takeDamage(contraccolpo);
+        }
     }
 
     /** @return valore grezzo di danno di questo attacco */
     public int getDanno() { return danno; }
+
+    /** @return danno inflitto all'attaccante dopo il colpo (0 = nessun contraccolpo) */
+    public int getContraccolpo() { return contraccolpo; }
 }

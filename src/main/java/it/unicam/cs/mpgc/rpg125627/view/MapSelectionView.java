@@ -24,7 +24,9 @@ public class MapSelectionView extends BorderPane {
 
     private final ListView<String> mapList = new ListView<>();
     private final Button startButton = new Button("Inizia partita");
+    private final Button loadButton  = new Button("Carica partita");
     private Consumer<String> onMapSelected;
+    private Runnable onLoadGame;
 
     public MapSelectionView(List<String> availableMaps) {
         setStyle("-fx-background-color: #1a1a2e;");
@@ -84,6 +86,22 @@ public class MapSelectionView extends BorderPane {
         startButton.setOnAction(e -> fireStart());
         startButton.setDisable(availableMaps.isEmpty());
 
+        loadButton.setStyle("""
+                -fx-background-color: #2a3a6d;
+                -fx-text-fill: white;
+                -fx-font-size: 15px;
+                -fx-font-family: 'Monospace';
+                -fx-padding: 10 32 10 32;
+                -fx-cursor: hand;
+                """);
+        loadButton.setOnMouseEntered(e ->
+                loadButton.setStyle(loadButton.getStyle()
+                        .replace("#2a3a6d", "#3a4a8d")));
+        loadButton.setOnMouseExited(e ->
+                loadButton.setStyle(loadButton.getStyle()
+                        .replace("#3a4a8d", "#2a3a6d")));
+        loadButton.setOnAction(e -> { if (onLoadGame != null) onLoadGame.run(); });
+
         // ── Messaggio assenza mappe ───────────────────────────────────────────
         Label noMaps = new Label(availableMaps.isEmpty()
                 ? "Nessuna mappa trovata in resources/maps/" : "");
@@ -93,7 +111,7 @@ public class MapSelectionView extends BorderPane {
         HBox listBox = new HBox(mapList);
         listBox.setAlignment(Pos.CENTER);
 
-        HBox btnBox = new HBox(startButton);
+        HBox btnBox = new HBox(16, startButton, loadButton);
         btnBox.setAlignment(Pos.CENTER);
 
         HBox msgBox = new HBox(noMaps);
@@ -113,6 +131,11 @@ public class MapSelectionView extends BorderPane {
     /** Registra il gestore invocato quando l'utente avvia la partita. */
     public void setOnMapSelected(Consumer<String> handler) {
         this.onMapSelected = handler;
+    }
+
+    /** Registra il gestore invocato quando l'utente preme "Carica partita". */
+    public void setOnLoadGame(Runnable handler) {
+        this.onLoadGame = handler;
     }
 
     private void fireStart() {

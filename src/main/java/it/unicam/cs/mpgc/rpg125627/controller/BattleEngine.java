@@ -93,6 +93,11 @@ public class BattleEngine {
             map.removeUnit(target.getPosizione());
             fireUnitDefeated(target);
         }
+
+        if (!attacker.isAlive()) {
+            map.removeUnit(attacker.getPosizione());
+            fireUnitDefeated(attacker);
+        }
     }
 
     /** Notifica {@code onTurnChanged} a tutti i listener registrati. */

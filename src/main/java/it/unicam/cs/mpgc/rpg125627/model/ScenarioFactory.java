@@ -65,10 +65,10 @@ public final class ScenarioFactory {
     private static final Map<String, String[]> NAMES = Map.of(
             "PLAYER_WARRIOR", new String[]{"Guerriero", "Paladin", "Cavaliere"},
             "PLAYER_MAGE",    new String[]{"Mago", "Stregone", "Veggente"},
-            "PLAYER_ARCHER",  new String[]{"Arciere", "Esploratore", "Cecchino"},
+            "PLAYER_ARCHER",  new String[]{"Arciere", "Esploratore", "Legolas"},
             "ENEMY_WARRIOR",  new String[]{"Brutus", "Golem", "Berserker"},
             "ENEMY_MAGE",     new String[]{"Strega", "Necromante", "Ombra"},
-            "ENEMY_ARCHER",   new String[]{"Cecchino", "Cacciatore", "Tiratore"}
+            "ENEMY_ARCHER",   new String[]{"Arciere", "Cacciatore", "Legolas"}
     );
 
     private static String buildName(UnitClass uc, Team team,
@@ -85,15 +85,15 @@ public final class ScenarioFactory {
         switch (uc) {
             case WARRIOR -> {
                 unit.addAbilita(new MeleeAttack("Colpo di Spada", 30));
-                unit.addAbilita(new MeleeAttack("Scudo Frantumato", 15));
+                unit.addAbilita(new MeleeAttack("Scudo Frantumato", 60, 15));
             }
             case MAGE -> {
-                unit.addAbilita(new RangedAttack("Sfera di Fuoco", 45, UnitClass.MAGE.getAttackRange()));
-                unit.addAbilita(new HealAbility("Guarigione", 25));
+                unit.addAbilita(new RangedAttack("Sfera di Fuoco", 50, UnitClass.MAGE.getAttackRange()));
+                unit.addAbilita(new HealAbility("Guarigione", 40));
             }
             case ARCHER -> {
                 unit.addAbilita(new RangedAttack("Tiro con l'Arco", 35, UnitClass.ARCHER.getAttackRange()));
-                unit.addAbilita(new MeleeAttack("Colpo Ravvicinato", 15));
+                unit.addAbilita(new MeleeAttack("Colpo Ravvicinato", 55));
             }
         }
     }

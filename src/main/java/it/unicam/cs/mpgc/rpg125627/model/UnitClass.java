@@ -10,7 +10,7 @@ public enum UnitClass {
     WARRIOR(120, 3, 1),
 
     /** Incantatore fragile ma con gittata di attacco media. */
-    MAGE(80, 2, 3),
+    MAGE(70, 2, 3),
 
     /** Combattente a distanza equilibrato tra mobilità e portata. */
     ARCHER(90, 3, 2);
