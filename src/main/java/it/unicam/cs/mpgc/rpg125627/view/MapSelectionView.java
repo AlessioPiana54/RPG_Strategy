@@ -22,23 +22,21 @@ import java.util.function.Consumer;
  */
 public class MapSelectionView extends BorderPane {
 
-    private final ListView<String> mapList = new ListView<>();
-    private final Button startButton = new Button("Inizia partita");
-    private final Button loadButton  = new Button("Carica partita");
+    private final ListView<String> mapList    = new ListView<>();
+    private final Button startButton          = new Button("Inizia partita");
+    private final Button loadButton           = new Button("Carica partita");
     private Consumer<String> onMapSelected;
     private Runnable onLoadGame;
 
     public MapSelectionView(List<String> availableMaps) {
-        setStyle("-fx-background-color: #1a1a2e;");
+        getStyleClass().add("bg-app");
 
         // ── Titolo ────────────────────────────────────────────────────────────
         Label title = new Label("Tactical RPG");
-        title.setStyle("-fx-text-fill: #e0e0ff; -fx-font-size: 36px; " +
-                       "-fx-font-weight: bold; -fx-font-family: 'Monospace';");
+        title.getStyleClass().add("map-title");
 
         Label subtitle = new Label("Seleziona una mappa");
-        subtitle.setStyle("-fx-text-fill: #a0a0cc; -fx-font-size: 16px; " +
-                          "-fx-font-family: 'Monospace';");
+        subtitle.getStyleClass().add("map-subtitle");
 
         VBox header = new VBox(8, title, subtitle);
         header.setAlignment(Pos.CENTER);
@@ -47,15 +45,7 @@ public class MapSelectionView extends BorderPane {
         // ── Lista mappe ───────────────────────────────────────────────────────
         mapList.getItems().addAll(availableMaps);
         mapList.getSelectionModel().setSelectionMode(SelectionMode.SINGLE);
-        mapList.setStyle("""
-                -fx-background-color: #0d0d1a;
-                -fx-border-color: #3a3a6e;
-                -fx-border-width: 1;
-                -fx-font-family: 'Monospace';
-                -fx-font-size: 14px;
-                -fx-control-inner-background: #0d0d1a;
-                -fx-text-fill: #c0c0ee;
-                """);
+        mapList.getStyleClass().add("map-list");
         mapList.setMaxWidth(400);
         mapList.setPrefHeight(180);
 
@@ -68,44 +58,18 @@ public class MapSelectionView extends BorderPane {
             if (e.getClickCount() == 2) fireStart();
         });
 
-        // ── Pulsante ──────────────────────────────────────────────────────────
-        startButton.setStyle("""
-                -fx-background-color: #3a5aad;
-                -fx-text-fill: white;
-                -fx-font-size: 15px;
-                -fx-font-family: 'Monospace';
-                -fx-padding: 10 32 10 32;
-                -fx-cursor: hand;
-                """);
-        startButton.setOnMouseEntered(e ->
-                startButton.setStyle(startButton.getStyle()
-                        .replace("#3a5aad", "#5070cd")));
-        startButton.setOnMouseExited(e ->
-                startButton.setStyle(startButton.getStyle()
-                        .replace("#5070cd", "#3a5aad")));
+        // ── Pulsanti ─────────────────────────────────────────────────────────
+        startButton.getStyleClass().add("btn-start");
         startButton.setOnAction(e -> fireStart());
         startButton.setDisable(availableMaps.isEmpty());
 
-        loadButton.setStyle("""
-                -fx-background-color: #2a3a6d;
-                -fx-text-fill: white;
-                -fx-font-size: 15px;
-                -fx-font-family: 'Monospace';
-                -fx-padding: 10 32 10 32;
-                -fx-cursor: hand;
-                """);
-        loadButton.setOnMouseEntered(e ->
-                loadButton.setStyle(loadButton.getStyle()
-                        .replace("#2a3a6d", "#3a4a8d")));
-        loadButton.setOnMouseExited(e ->
-                loadButton.setStyle(loadButton.getStyle()
-                        .replace("#3a4a8d", "#2a3a6d")));
+        loadButton.getStyleClass().add("btn-load");
         loadButton.setOnAction(e -> { if (onLoadGame != null) onLoadGame.run(); });
 
         // ── Messaggio assenza mappe ───────────────────────────────────────────
         Label noMaps = new Label(availableMaps.isEmpty()
-                ? "Nessuna mappa trovata in resources/maps/" : "");
-        noMaps.setStyle("-fx-text-fill: #cc4444; -fx-font-family: 'Monospace'; -fx-font-size: 13px;");
+            ? "Nessuna mappa trovata in resources/maps/" : "");
+        noMaps.getStyleClass().add("no-maps-label");
 
         // ── Layout centrale ───────────────────────────────────────────────────
         HBox listBox = new HBox(mapList);

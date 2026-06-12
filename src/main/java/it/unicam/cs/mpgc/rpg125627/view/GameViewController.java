@@ -361,6 +361,7 @@ public class GameViewController implements GameEventListener {
     public void onUnitAttacked(Unit attacker, Unit target, int damage) {
         Platform.runLater(() -> {
             mapView.refresh();
+            mapView.showDamage(target.getPosizione(), damage);
             actionBar.appendLog(attacker.getName() + " attacca " + target.getName()
                 + " per " + damage + " danni  [HP " + target.getHp() + "/" + target.getMaxHp() + "]");
             if (selectedUnit != null && selectedUnit == target) {

@@ -94,6 +94,7 @@ Durante lo sviluppo del progetto sono stati utilizzati strumenti di AI come supp
 - **Scrittura dei test JUnit 5** — generazione della struttura iniziale dei casi di test, scelta degli scenari da coprire e dei valori di boundary; ogni test è stato poi letto, compreso e validato manualmente prima di essere incluso nella suite.
 - **Scrittura dei Javadoc** — bozza automatica dei commenti su classi e metodi pubblici; il testo è stato revisionato e adattato per rispecchiare fedelmente il comportamento reale del codice.
 - **Ricerca e analisi di bug** — l'AI è stata consultata per individuare la causa di comportamenti inattesi (es. desincronia degli eventi UI, errori di serializzazione JAXB); le soluzioni proposte sono state valutate e integrate solo dopo verifica manuale.
+- **Miglioramenti grafici** — progettazione e implementazione di funzionalità visive avanzate: simboli Unicode per terreni e classi unità, barre HP sulla griglia, numeri di danno fluttuanti con animazione, effetto pulsante sulla selezione, forme geometriche classe-specifiche (cerchio/stella/triangolo) con ombra, e centralizzazione di tutti gli stili in un foglio CSS esterno; ogni scelta è stata rivista e adattata al contesto del progetto.
 
 
 ---

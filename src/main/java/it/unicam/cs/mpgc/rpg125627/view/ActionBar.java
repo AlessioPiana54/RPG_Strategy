@@ -27,38 +27,20 @@ public class ActionBar extends HBox {
         setPadding(new Insets(10, 14, 10, 14));
         setPrefHeight(140);
         setAlignment(Pos.CENTER_LEFT);
-        setStyle("-fx-background-color: #0d0d1a; -fx-border-color: #1a1a3e; -fx-border-width: 2 0 0 0;");
+        getStyleClass().add("action-bar");
 
         endTurnButton = new Button("Fine turno");
         endTurnButton.setPrefWidth(120);
         endTurnButton.setPrefHeight(38);
-        endTurnButton.setStyle("""
-            -fx-background-color: #e94560;
-            -fx-text-fill: white;
-            -fx-font-weight: bold;
-            -fx-font-size: 13;
-            -fx-cursor: hand;
-            -fx-background-radius: 4;
-            """);
+        endTurnButton.getStyleClass().add("btn-end-turn");
 
         undoButton = new Button("Annulla");
         undoButton.setPrefWidth(120);
         undoButton.setPrefHeight(38);
-        undoButton.setStyle("""
-            -fx-background-color: #444;
-            -fx-text-fill: #ccc;
-            -fx-font-size: 12;
-            -fx-cursor: hand;
-            -fx-background-radius: 4;
-            """);
+        undoButton.getStyleClass().add("btn-undo");
 
         enemyTurnLabel = new Label("Turno nemico...");
-        enemyTurnLabel.setStyle("""
-            -fx-text-fill: #ff6b6b;
-            -fx-font-size: 13;
-            -fx-font-weight: bold;
-            -fx-font-style: italic;
-            """);
+        enemyTurnLabel.getStyleClass().add("enemy-turn-label");
         enemyTurnLabel.setVisible(false);
         enemyTurnLabel.setManaged(false);
 
@@ -70,18 +52,12 @@ public class ActionBar extends HBox {
         logArea.setEditable(false);
         logArea.setWrapText(true);
         logArea.setPrefRowCount(4);
-        logArea.setStyle("""
-            -fx-background-color: #111;
-            -fx-control-inner-background: #111;
-            -fx-text-fill: #ccc;
-            -fx-font-size: 11;
-            -fx-font-family: 'Courier New', monospace;
-            """);
+        logArea.getStyleClass().add("log-area");
 
         ScrollPane logScroll = new ScrollPane(logArea);
         logScroll.setFitToWidth(true);
         logScroll.setFitToHeight(true);
-        logScroll.setStyle("-fx-background: #111; -fx-border-color: #333; -fx-border-width: 1;");
+        logScroll.getStyleClass().add("log-scroll");
         HBox.setHgrow(logScroll, Priority.ALWAYS);
 
         getChildren().addAll(buttons, logScroll);

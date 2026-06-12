@@ -21,25 +21,23 @@ import javafx.scene.layout.VBox;
  */
 public class EndGameView extends BorderPane {
 
-    private final Button retryButton     = new Button("Rivai");
-    private final Button menuButton      = new Button("Menu principale");
+    private final Button retryButton = new Button("Rivai");
+    private final Button menuButton  = new Button("Menu principale");
     private Runnable onRetry;
     private Runnable onMainMenu;
 
     public EndGameView(GameState gameState) {
         boolean victory = gameState.getFase() == GamePhase.VICTORY;
-        setStyle("-fx-background-color: #1a1a2e;");
+        getStyleClass().add("end-bg");
 
         // ── Titolo ─────────────────────────────────────────────────────────────
         Label titleLabel = new Label(victory ? "Vittoria!" : "Sconfitta");
-        titleLabel.setStyle("-fx-text-fill: " + (victory ? "#ffd700" : "#cc3333") + ";"
-                + "-fx-font-size: 52px; -fx-font-weight: bold; -fx-font-family: 'Monospace';");
+        titleLabel.getStyleClass().add(victory ? "end-title-victory" : "end-title-defeat");
 
         Label outcomeLabel = new Label(victory
-                ? "Tutti i nemici sono stati sconfitti."
-                : "Le tue unità sono state eliminate.");
-        outcomeLabel.setStyle("-fx-text-fill: #a0a0cc; -fx-font-size: 15px; " +
-                              "-fx-font-family: 'Monospace';");
+            ? "Tutti i nemici sono stati sconfitti."
+            : "Le tue unità sono state eliminate.");
+        outcomeLabel.getStyleClass().add("end-outcome");
 
         VBox titleBox = new VBox(10, titleLabel, outcomeLabel);
         titleBox.setAlignment(Pos.CENTER);
@@ -47,31 +45,27 @@ public class EndGameView extends BorderPane {
 
         // ── Statistiche ────────────────────────────────────────────────────────
         long enemyDefeated = gameState.getUnita().stream()
-                .filter(u -> u.getTeam() == Team.ENEMY && !u.isAlive())
-                .count();
+            .filter(u -> u.getTeam() == Team.ENEMY && !u.isAlive()).count();
         long alliesLost = gameState.getUnita().stream()
-                .filter(u -> u.getTeam() == Team.PLAYER && !u.isAlive())
-                .count();
+            .filter(u -> u.getTeam() == Team.PLAYER && !u.isAlive()).count();
         int turns = gameState.getTurnoCorrente();
 
         Label statsTitle = new Label("Statistiche");
-        statsTitle.setStyle("-fx-text-fill: #c0c0ee; -fx-font-size: 18px; " +
-                            "-fx-font-weight: bold; -fx-font-family: 'Monospace';");
+        statsTitle.getStyleClass().add("end-stats-title");
 
         VBox statsBox = new VBox(8,
-                statsTitle,
-                buildStat("Turni giocati",        String.valueOf(turns)),
-                buildStat("Nemici sconfitti",      String.valueOf(enemyDefeated)),
-                buildStat("Alleati persi",         String.valueOf(alliesLost))
+            statsTitle,
+            buildStat("Turni giocati",   String.valueOf(turns)),
+            buildStat("Nemici sconfitti", String.valueOf(enemyDefeated)),
+            buildStat("Alleati persi",    String.valueOf(alliesLost))
         );
         statsBox.setAlignment(Pos.CENTER_LEFT);
         statsBox.setMaxWidth(340);
-        statsBox.setStyle("-fx-background-color: #0d0d1a; -fx-border-color: #3a3a6e; " +
-                          "-fx-border-width: 1; -fx-padding: 20;");
+        statsBox.getStyleClass().add("end-stats-box");
 
         // ── Pulsanti ───────────────────────────────────────────────────────────
-        styleButton(retryButton,  "#3a5aad", "#5070cd");
-        styleButton(menuButton,   "#2a3a6d", "#3a4a8d");
+        retryButton.getStyleClass().add("btn-retry");
+        menuButton .getStyleClass().add("btn-menu");
 
         retryButton.setOnAction(e -> { if (onRetry   != null) onRetry.run(); });
         menuButton .setOnAction(e -> { if (onMainMenu != null) onMainMenu.run(); });
@@ -86,7 +80,6 @@ public class EndGameView extends BorderPane {
 
         Separator sep = new Separator();
         sep.setMaxWidth(340);
-        sep.setStyle("-fx-background-color: #3a3a6e;");
 
         VBox center = new VBox(20, statsRow, sep, btnBox);
         center.setAlignment(Pos.CENTER);
@@ -107,19 +100,10 @@ public class EndGameView extends BorderPane {
 
     private static HBox buildStat(String label, String value) {
         Label lbl = new Label(label + ":");
-        lbl.setStyle("-fx-text-fill: #8888bb; -fx-font-family: 'Monospace'; -fx-font-size: 14px;");
+        lbl.getStyleClass().add("stat-label");
         lbl.setMinWidth(180);
         Label val = new Label(value);
-        val.setStyle("-fx-text-fill: #e0e0ff; -fx-font-family: 'Monospace'; " +
-                     "-fx-font-size: 14px; -fx-font-weight: bold;");
+        val.getStyleClass().add("stat-value");
         return new HBox(8, lbl, val);
-    }
-
-    private static void styleButton(Button btn, String base, String hover) {
-        String common = "-fx-text-fill: white; -fx-font-size: 14px; " +
-                        "-fx-font-family: 'Monospace'; -fx-padding: 10 28 10 28; -fx-cursor: hand;";
-        btn.setStyle("-fx-background-color: " + base + "; " + common);
-        btn.setOnMouseEntered(e -> btn.setStyle("-fx-background-color: " + hover + "; " + common));
-        btn.setOnMouseExited (e -> btn.setStyle("-fx-background-color: " + base  + "; " + common));
     }
 }
