@@ -1,111 +1,111 @@
 # 📌 Tactical RPG — Rpg_Strategy
 
-Gioco di ruolo tattico a turni realizzato con JavaFX, JAXB e Gradle.  
-Il giocatore controlla un gruppo di unità su una griglia 2D e combatte contro avversari gestiti da un'IA,
-alternando movimenti e abilità in un ciclo di turno strutturato.
+Turn-based tactical role-playing game built with JavaFX, JAXB and Gradle.  
+The player controls a group of units on a 2D grid and fights against opponents driven by an AI,
+alternating movement and abilities in a structured turn cycle.
 
 ---
 
-## 🚀 Come eseguire il progetto
+## 🚀 How to run the project
 
-### Prerequisiti
+### Prerequisites
 - Java 25 (LTS)
-- Gradle (wrapper incluso — nessuna installazione necessaria)
-- Connessione internet al primo avvio (scarica JavaFX e JAXB da Maven Central)
+- Gradle (wrapper included — no installation required)
+- Internet connection on first launch (downloads JavaFX and JAXB from Maven Central)
 
-### Istruzioni
+### Instructions
 
 ```bash
-git clone <url-del-repository>
+git clone <repository-url>
 cd RPG_Strategy
 ```
 
-### Build del progetto
+### Build the project
 ```bash
 ./gradlew build
 ```
 
-### Esecuzione
+### Run
 ```bash
 ./gradlew run          # Linux / macOS / Windows (Git Bash)
-.\gradlew.bat run      # Windows (PowerShell / Prompt dei comandi)
+.\gradlew.bat run      # Windows (PowerShell / Command Prompt)
 ```
 
-> La build produce anche un fat-jar con dipendenze incluse:
+> The build also produces a fat-jar with all dependencies included:
 > `build/libs/rpg-strategy-1.0-SNAPSHOT-all.jar`
 
 ---
 
-## 🎮 Funzionalità principali
+## 🎮 Main features
 
-- **Mappa a griglia** con tre tipi di terreno: PLAIN, FOREST (percorribile), MOUNTAIN (ostacolo)
-- **Tre classi di unità** con statistiche bilanciate:
-  - **Guerriero** — 120 HP, gittata 3, attacco corpo a corpo
-  - **Mago** — 70 HP, gittata 2, attacco a distanza + cura
-  - **Arciere** — 90 HP, gittata 3, attacco a distanza
-- **Ciclo di azione per unità** nel turno: `READY → MOVED → EXHAUSTED`
-- **IA nemica** con pathfinding BFS verso il bersaglio più vicino
-- **Salvataggio / caricamento** partita in XML (`~/.tacticarpg/saves/`)
-- **Selezione mappe** predefinite al lancio (foresta e pianura)
+- **Grid map** with three terrain types: PLAIN, FOREST (walkable), MOUNTAIN (obstacle)
+- **Three unit classes** with balanced stats:
+  - **Warrior** — 120 HP, range 3, melee attack
+  - **Mage** — 70 HP, range 2, ranged attack + healing
+  - **Archer** — 90 HP, range 3, ranged attack
+- **Per-unit action cycle** within the turn: `READY → MOVED → EXHAUSTED`
+- **Enemy AI** with BFS pathfinding towards the nearest target
+- **Save / load** games in XML (`~/.tacticarpg/saves/`)
+- **Built-in map selection** at launch (forest and plains)
 
 ---
 
-## 🧪 Test
+## 🧪 Tests
 
 ```bash
 ./gradlew test
 ```
 
-Suite JUnit 5 che copre:
+JUnit 5 suite covering:
 
-| Classe di test | Cosa verifica |
+| Test class | What it verifies |
 |---|---|
-| `BattleEngineTest` | movimento, abilità, eventi del motore di combattimento |
-| `DefaultGameControllerTest` | flusso di gioco, selezione unità, undo |
-| `TurnLogicTest` | logica ActionState e ciclo di turno |
-| `SimpleAIStrategyTest` | pathfinding e attacchi dell'IA nemica |
-| `TurnManagerTest` | ordine di attivazione delle unità |
-| `XmlGameRepositoryTest` | round-trip di serializzazione XML |
+| `BattleEngineTest` | movement, abilities, combat engine events |
+| `DefaultGameControllerTest` | game flow, unit selection, undo |
+| `TurnLogicTest` | ActionState logic and turn cycle |
+| `SimpleAIStrategyTest` | enemy AI pathfinding and attacks |
+| `TurnManagerTest` | unit activation order |
+| `XmlGameRepositoryTest` | XML serialization round-trip |
 
 ---
 
-## 📁 Struttura del progetto
+## 📁 Project structure
 
 ```
 src/main/java/it/unicam/cs/mpgc/rpg125627/
-├── model/          # Dominio: Unit, GameState, GridMap, Ability, …
-├── controller/     # Logica: DefaultGameController, BattleEngine, SimpleAIStrategy, …
+├── model/          # Domain: Unit, GameState, GridMap, Ability, …
+├── controller/     # Logic: DefaultGameController, BattleEngine, SimpleAIStrategy, …
 ├── persistence/    # I/O: XmlGameRepository, XmlMapRepository, SaveManager, …
-└── view/           # UI JavaFX: MapView, ActionBar, GameViewController, …
+└── view/           # JavaFX UI: MapView, ActionBar, GameViewController, …
 
 src/main/resources/maps/
-├── map_forest.xml  # Mappa 8×8 con bosco e montagne
-└── map_plains.xml  # Mappa 6×6 tutto pianura
+├── map_forest.xml  # 8×8 map with woods and mountains
+└── map_plains.xml  # 6×6 map, all plains
 
-src/test/java/…     # Suite JUnit 5
+src/test/java/…     # JUnit 5 suite
 ```
 
 ---
 
-## 🤖 Uso di strumenti di AI
+## 🤖 Use of AI tools
 
-Durante lo sviluppo del progetto sono stati utilizzati strumenti di AI come supporto in fasi specifiche del lavoro:
+During the development of the project, AI tools were used as support in specific phases of the work:
 
-- **Scrittura dei test JUnit 5** — generazione della struttura iniziale dei casi di test, scelta degli scenari da coprire e dei valori di boundary; ogni test è stato poi letto, compreso e validato manualmente prima di essere incluso nella suite.
-- **Scrittura dei Javadoc** — bozza automatica dei commenti su classi e metodi pubblici; il testo è stato revisionato e adattato per rispecchiare fedelmente il comportamento reale del codice.
-- **Ricerca e analisi di bug** — l'AI è stata consultata per individuare la causa di comportamenti inattesi (es. desincronia degli eventi UI, errori di serializzazione JAXB); le soluzioni proposte sono state valutate e integrate solo dopo verifica manuale.
-- **Miglioramenti grafici** — progettazione e implementazione di funzionalità visive avanzate: simboli Unicode per terreni e classi unità, barre HP sulla griglia, numeri di danno fluttuanti con animazione, effetto pulsante sulla selezione, forme geometriche classe-specifiche (cerchio/stella/triangolo) con ombra, e centralizzazione di tutti gli stili in un foglio CSS esterno; ogni scelta è stata rivista e adattata al contesto del progetto.
+- **Writing JUnit 5 tests** — generation of the initial structure of the test cases, choice of the scenarios to cover and of the boundary values; each test was then read, understood and manually validated before being included in the suite.
+- **Writing Javadoc** — automatic drafting of comments on public classes and methods; the text was reviewed and adapted to faithfully reflect the actual behavior of the code.
+- **Bug research and analysis** — the AI was consulted to identify the cause of unexpected behavior (e.g. UI event desynchronization, JAXB serialization errors); the proposed solutions were evaluated and integrated only after manual verification.
+- **Graphical improvements** — design and implementation of advanced visual features: Unicode symbols for terrains and unit classes, HP bars on the grid, animated floating damage numbers, pulsing effect on selection, class-specific geometric shapes (circle/star/triangle) with shadows, and centralization of all styles in an external CSS stylesheet; every choice was reviewed and adapted to the project context.
 
-
----
-
-## ⚠️ Note
-
-- Il fat-jar (`*-all.jar`) include JavaFX: può essere eseguito con `java -jar` su qualunque JDK 25 senza configurazione aggiuntiva.
-- I salvataggi sono compatibili tra piattaforme purché si usi la stessa versione del progetto.
 
 ---
 
-## 📄 Licenza
+## ⚠️ Notes
+
+- The fat-jar (`*-all.jar`) includes JavaFX: it can be run with `java -jar` on any JDK 25 with no additional configuration.
+- Saves are cross-platform compatible as long as the same project version is used.
+
+---
+
+## 📄 License
 
 MIT — Copyright 2026 AlessioPiana54
