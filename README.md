@@ -1,4 +1,15 @@
+<p align="center">
+  <img src="docs/rpg-strategy.webp" alt="Tactical RPG — Rpg_Strategy" width="400">
+</p>
+
 # 📌 Tactical RPG — Rpg_Strategy
+
+![Java](https://img.shields.io/badge/Java-25-ED8B00?style=for-the-badge&logo=openjdk&logoColor=white)
+![JavaFX](https://img.shields.io/badge/JavaFX-UI-1E88E5?style=for-the-badge&logo=openjdk&logoColor=white)
+![JAXB](https://img.shields.io/badge/JAXB-XML-6A1B9A?style=for-the-badge)
+![Gradle](https://img.shields.io/badge/Gradle-Build-02303A?style=for-the-badge&logo=gradle&logoColor=white)
+![JUnit5](https://img.shields.io/badge/JUnit-5-25A162?style=for-the-badge&logo=junit5&logoColor=white)
+[![License](https://img.shields.io/badge/License-MIT-green?style=for-the-badge)](LICENSE)
 
 Turn-based tactical role-playing game built with JavaFX, JAXB and Gradle.  
 The player controls a group of units on a 2D grid and fights against opponents driven by an AI,
